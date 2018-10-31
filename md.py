@@ -42,7 +42,8 @@ class md:
         ml          length of memory kernel (max(all baths))
 
         hw          eigen frequencies
-        U           eigen vectors
+        U           eigen vectors, each column corresponds to one eigen vector,
+                    for example, hw, U = np.linalg.eigh(DynMat)
 
         t,p,q       md time step, velocity and position vector at t
 
