@@ -1,0 +1,6 @@
+       close(13)
+       close(14)
+       close(15)
+       close(16)
+       close(17)
+       close(18)
