@@ -241,7 +241,8 @@ class lammps(object):
         print("lammps launched")
         lines = open(self.infile, 'r').readlines()
         for line in lines: self.command(line)
-        self.newxyz = self.xyz = self.gather_atoms("x", 1, 3)
+        self.xyz = self.gather_atoms("x", 1, 3)
+        self.newxyz = self.gather_atoms("x", 1, 3)
         self.number = self.get_natoms()
         #self.els = self.extract_atom("mass",2)[1]
         self.els = self.gather_atoms("mass",1,1)[1]
