@@ -68,7 +68,7 @@ class lammps(object):
 
     # create instance of LAMMPS
 
-    def __init__(self, label, infile, mesh=100., dmtol=0.001, \
+    def __init__(self, label, infile, xyz, mesh=100., dmtol=0.001, \
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
                  name="", cmdargs=None, ptr=None, comm=None
                  ):
@@ -236,17 +236,24 @@ class lammps(object):
         self.label = label
         self.lunit = lunit
         self.eunit = eunit
+        self.xyz = N.array([a[1:] for a in xyz], dtype='d').flatten()
+        self.els = [a[0] for a in xyz]
+        self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(AtomicMassTable[a])]
+                                         for a in self.els]).flatten()
+        # 1D array gives the unit cell
+        # x1,y1,z1,x2,y2,z2,x3,y3,z3
+        #self.cell = N.array(cell,dtype='d').flatten()
 
     def start(self, np=1):
         print("lammps launched")
         lines = open(self.infile, 'r').readlines()
         for line in lines: self.command(line)
-        self.xyz = self.gather_atoms("x", 1, 3)
+        #self.xyz = self.gather_atoms("x", 1, 3)
         self.newxyz = self.gather_atoms("x", 1, 3)
         self.number = self.get_natoms()
         #self.els = self.extract_atom("mass",2)[1]
-        self.els = self.gather_atoms("mass",1,1)[1]
-        self.conv = 1.
+        #self.els = self.gather_atoms("mass",1,1)[1]
+        #self.conv = 1.
         self.initforce()
 
     def quit(self):
@@ -256,7 +263,7 @@ class lammps(object):
     def newx(self, q):
         for i in range(3*self.number):
             # self.newxyz[i] = self.xyz[i]+self.conv*q[i]
-            self.newxyz[i] = self.xyz[i] + self.conv * q[i]
+            self.newxyz[i] = self.xyz[i] + self.conv[i] * q[i]
         return self.newxyz
 
     #def absforce(self, q):
@@ -278,7 +285,11 @@ class lammps(object):
     def absforce(self, q):
         self.scatter_atoms("x", 1, 3, self.newx(q))
         self.command("run 1")
-        return self.conv * N.array(self.gather_atoms("f",1,3))
+        orgforce = N.array(self.gather_atoms("f", 1, 3))
+        convforce = N.zeros(len(self.xyz))
+        for i in range(3*self.number):
+            convforce[i] = self.conv[i] * orgforce[i]
+        return convforce
         
     def initforce(self):
         print("Calculate zero displacement force")
