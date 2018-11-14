@@ -247,10 +247,10 @@ class lammps(object):
         for type in self.type:
             self.els.append(self.mass[type])
         self.xyz = self.gather_atoms("x", 1, 3)
+        self.newxyz = self.gather_atoms("x", 1, 3)
         self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
                                          for mass in self.els]).flatten()
         self.number = self.get_natoms()
-        self.newxyz = self.gather_atoms("x", 1, 3)
         self.initforce()
 
     def quit(self):

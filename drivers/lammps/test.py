@@ -1,7 +1,6 @@
 # using LAMMPS as a driver
 from lammps import *
 import numpy as N
-import re
 
 infile = 'in.test'
 
