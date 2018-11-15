@@ -1,10 +1,8 @@
 # using LAMMPS as a driver
-from lammps import *
+from lammps import lammps
 import numpy as N
 
-infile = 'in.test'
-
-lmp = lammps(label="test", infile=infile)
+lmp = lammps(infile='in.test')
 lmp.start()
 
 deltaq0 = [0, 0, 0, 0, 0, 0, 0, 0, 0]

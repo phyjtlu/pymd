@@ -1,12 +1,12 @@
  LAMMPS data file
 
-        3 atoms
+        5 atoms
         0 bonds
         0 angles
         0 dihedrals
         0 impropers
 
-        1 atom types
+        2 atom types
         0 bond types
         0 angle types
         0 dihedral types
@@ -19,9 +19,12 @@
  Masses
 
            1  12.011150
+           2   1.007970
 
  Atoms
 
            1  1  1  0   0.0000000       0.0000000       0.0000000    
            2  1  1  0   0.7000000       0.7000000       0.0000000    
            3  1  1  0   -0.7000000      0.7000000       0.0000000    
+           4  1  2  0   -0.7000000      -0.7000000      0.0000000    
+           5  1  2  0   0.7000000       -0.7000000      0.0000000    
