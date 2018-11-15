@@ -36,9 +36,6 @@ from inspect import getsourcefile
 import sys
 import numpy as N
 
-#atomic table and periodic table from units.py
-from units import *
-
 def get_ctypes_int(size):
     if size == 4:
         return c_int32
@@ -68,7 +65,7 @@ class lammps(object):
 
     # create instance of LAMMPS
 
-    def __init__(self, label, infile, mesh=100., dmtol=0.001, \
+    def __init__(self, infile, label="", mesh=100., dmtol=0.001, \
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
                  name="", cmdargs=None, ptr=None, comm=None
                  ):
@@ -262,30 +259,10 @@ class lammps(object):
             self.newxyz[i] = self.xyz[i] + self.conv[i] * q[i]
         return self.newxyz
 
-    #def absforce(self, q):
-    #    self.scatter_atoms("x", 1, 3, self.newx(q))
-    #    self.command("run 1")
-    #    #self.absf = N.zeros((self.get_natoms(), 3), dtype=N.float_)
-    #    #self.lmpf = self.extract_atom("f", 3)
-    #    #for m in range(self.get_natoms()):
-    #    #    for n in range(3):
-    #    #        self.absf[m][n] = self.lmpf[m][n]
-    #    # return self.conv * N.array(self.gather_atoms("f", 1, 3)) wrong!
-    #    self.absf = N.zeros(3*self.number, dtype=N.float_)
-    #    self.lmpf = self.extract_atom("f", 3)
-    #    for m in range(self.number):
-    #        for n in range(3):
-    #            self.absf[3*m+n] = self.lmpf[m][n]
-    #    return self.conv * self.absf
-
     def absforce(self, q):
         self.scatter_atoms("x", 1, 3, self.newx(q))
         self.command("run 1")
-        orgforce = N.array(self.gather_atoms("f", 1, 3))
-        #convforce = N.zeros(3*self.number)
-        #for i in range(3*self.number):
-        #    convforce[i] = self.conv[i] * orgforce[i]
-        return self.conv*orgforce
+        return self.conv*N.array(self.gather_atoms("f", 1, 3))
         
     def initforce(self):
         print("Calculate zero displacement force")

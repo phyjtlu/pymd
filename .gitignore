@@ -1,4 +1,3 @@
 *.pyc
 drivers/lammps/lammps.py
-drivers/lammps/units.py
 drivers/lammps/log.lammps
