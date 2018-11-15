@@ -239,7 +239,8 @@ class lammps(object):
         lines = open(self.infile, 'r').readlines()
         for line in lines: self.command(line)
         self.type = N.array(self.gather_atoms("type", 0, 1))
-        self.mass = N.array(self.gather_atoms("mass",1,1))
+        #self.mass = N.array(self.gather_atoms("mass",1,1))
+        self.mass = self.extract_atom("mass",2)
         self.els = []
         for type in self.type:
             self.els.append(self.mass[type])
