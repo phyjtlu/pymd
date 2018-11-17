@@ -1,0 +1,3 @@
+*.pyc
+drivers/lammps/lammps.py
+drivers/lammps/log.lammps

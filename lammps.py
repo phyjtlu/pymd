@@ -37,6 +37,8 @@ from inspect import getsourcefile
 import sys
 import numpy as N
 
+#<<<<<<< master
+#=======
 #atomic table and periodic table from units.py
 #from units import *
 PeriodicTable = {'H':1,1:'H','D':1001,1001:'D','He':2,2:'He','Li':3,3:'Li','Be':4,4:'Be','B':5,5:'B','C':6,6:'C','N':7,7:'N','O':8,8:'O','F':9,9:'F','Ne':10,10:'Ne','Na':11,11:'Na','Mg':12,12:'Mg','Al':13,13:'Al','Si':14,14:'Si','P':15,15:'P','S':16,16:'S','Cl':17,17:'Cl','Ar':18,18:'Ar','K':19,19:'K','Ca':20,20:'Ca','Sc':21,21:'Sc','Ti':22,22:'Ti','V':23,23:'V','Cr':24,24:'Cr','Mn':25,25:'Mn','Fe':26,26:'Fe','Co':27,27:'Co','Ni':28,28:'Ni','Cu':29,29:'Cu','Zn':30,30:'Zn','Ga':31,31:'Ga','Ge':32,32:'Ge','As':33,33:'As','Se':34,34:'Se','Br':35,35:'Br','Kr':36,36:'Kr','Rb':37,37:'Rb','Sr':38,38:'Sr','Y':39,39:'Y','Zr':40,40:'Zr','Nb':41,41:'Nb','Mo':42,42:'Mo','Tc':43,43:'Tc','Ru':44,44:'Ru','Rh':45,45:'Rh','Pd':46,46:'Pd','Ag':47,47:'Ag','Cd':48,48:'Cd','In':49,49:'In','Sn':50,50:'Sn','Sb':51,51:'Sb','Te':52,52:'Te','I':53,53:'I','Xe':54,54:'Xe','Cs':55,55:'Cs','Ba':56,56:'Ba','La':57,57:'La','Ce':58,58:'Ce','Pr':59,59:'Pr','Nd':60,60:'Nd','Pm':61,61:'Pm','Sm':62,62:'Sm','Eu':63,63:'Eu','Gd':64,64:'Gd','Tb':65,65:'Tb','Dy':66,66:'Dy','Ho':67,67:'Ho','Er':68,68:'Er','Tm':69,69:'Tm','Yb':70,70:'Yb','Lu':71,71:'Lu','Hf':72,72:'Hf','Ta':73,73:'Ta','W':74,74:'W','Re':75,75:'Re','Os':76,76:'Os','Ir':77,77:'Ir','Pt':78,78:'Pt','Au':79,79:'Au','Hg':80,80:'Hg','Tl':81,81:'Tl','Pb':82,82:'Pb','Bi':83,83:'Bi','Po':84,84:'Po','At':85,85:'At','Rn':86,86:'Rn','Fr':87,87:'Fr','Ra':88,88:'Ra','Ac':89,89:'Ac','Th':90,90:'Th','Pa':91,91:'Pa','U':92,92:'U','Np':93,93:'Np','Pu':94,94:'Pu','Am':95,95:'Am','Cm':96,96:'Cm','Bk':97,97:'Bk','Cf':98,98:'Cf','Es':99,99:'Es','Fm':100,100:'Fm','Md':101,101:'Md','No':102,102:'No'}
@@ -70,6 +72,7 @@ AtomicMassTable={'H':1.00794, 'He':4.002602, 'Li':6.941, 'Be':9.012182, \
     'Mt':276, 'Ds':281, 'Rg':280, 'Cn':285, 'Uut':284, \
     'Uuq':289, 'Uup':288, 'Uuh':293, 'Uus':294, 'Uuo':294}
 
+#>>>>>>> master
 def get_ctypes_int(size):
     if size == 4:
         return c_int32
@@ -99,6 +102,9 @@ class lammps(object):
 
     # create instance of LAMMPS
 
+#<<<<<<< master
+#    def __init__(self, infile, label="", mesh=100., dmtol=0.001, \
+#=======
     def __init__(self, label, infile, \
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
                  name="", cmdargs=None, ptr=None, comm=None
@@ -273,18 +279,30 @@ class lammps(object):
 
         lines = open(self.infile, 'r').readlines()
         for line in lines: self.command(line)
-        self.newxyz = self.xyz = self.gather_atoms("x", 1, 3)
+        self.type = N.array(self.gather_atoms("type", 0, 1))
+        #self.mass = N.array(self.gather_atoms("mass",1,1))
+        self.mass = self.extract_atom("mass",2)
+        self.els = []
+        for type in self.type:
+            self.els.append(self.mass[type])
+        self.xyz = self.gather_atoms("x", 1, 3)
+        self.newxyz = self.gather_atoms("x", 1, 3)
+        self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
+                                         for mass in self.els]).flatten()
         self.number = self.get_natoms()
+#<<<<<<< master
+#=======
 
-        #conversion factor from eV/Ang (force from lammps)
-        #to the intermal unit of MD
-        #todo
-        #self.els = self.extract_atom("mass",2)
-        self.els = self.gather_atoms("mass",1,1)
-        print("self.els:",self.els[1])
-        #self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(AtomicMassTable[a])]\
-                   #                        for a in self.els]).flatten()
-        self.conv = 1.
+#        #conversion factor from eV/Ang (force from lammps)
+#        #to the intermal unit of MD
+#        #todo
+#        #self.els = self.extract_atom("mass",2)
+#        self.els = self.gather_atoms("mass",1,1)
+#        print("self.els:",self.els[1])
+#        #self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(AtomicMassTable[a])]\
+#                   #                        for a in self.els]).flatten()
+#        self.conv = 1.
+#>>>>>>> master
         self.initforce()
 
     def quit(self):
@@ -293,34 +311,17 @@ class lammps(object):
 
     def newx(self, q):
         for i in range(3*self.number):
-            # self.newxyz[i] = self.xyz[i]+self.conv*q[i]
-            self.newxyz[i] = self.xyz[i] + self.conv * q[i]
+            self.newxyz[i] = self.xyz[i] + self.conv[i] * q[i]
         return self.newxyz
-
-    #def absforce(self, q):
-    #    self.scatter_atoms("x", 1, 3, self.newx(q))
-    #    self.command("run 1")
-    #    #self.absf = N.zeros((self.get_natoms(), 3), dtype=N.float_)
-    #    #self.lmpf = self.extract_atom("f", 3)
-    #    #for m in range(self.get_natoms()):
-    #    #    for n in range(3):
-    #    #        self.absf[m][n] = self.lmpf[m][n]
-    #    # return self.conv * N.array(self.gather_atoms("f", 1, 3)) wrong!
-    #    self.absf = N.zeros(3*self.number, dtype=N.float_)
-    #    self.lmpf = self.extract_atom("f", 3)
-    #    for m in range(self.number):
-    #        for n in range(3):
-    #            self.absf[3*m+n] = self.lmpf[m][n]
-    #    return self.conv * self.absf
 
     def absforce(self, q):
         self.scatter_atoms("x", 1, 3, self.newx(q))
         self.command("run 1")
-        return self.conv * N.array(self.gather_atoms("f",1,3))
+        return self.conv*N.array(self.gather_atoms("f", 1, 3))
         
     def initforce(self):
         print("Calculate zero displacement force")
-        extq = N.zeros(len(self.xyz))
+        extq = N.zeros(3*self.number)
         self.f0 = self.absforce(extq)
 
     def force(self, q):
