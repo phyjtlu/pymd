@@ -49,7 +49,8 @@ print "initialise md"
 #format of xyz:
 # [["C",0,0,0],["C",0,0,1.0]]
 #
-
+print ("els:",lmp.els)
+print ("xyz:",lmp.xyz[:])
 
 
 
@@ -65,11 +66,11 @@ mdrun.AddLMPint(lmp)
 #number of dynamical atoms
 gamma = 10**-5
 nd=len(lmp.xyz)
-eta=gamma*N.identity(3*nd,N.float)
+eta=gamma*N.identity(nd,N.float)
 #--------------------------------------------------------------------------------------
 #----------------------------------------------------
 #atom indices that are connecting to debyge bath
-ecats=range(3*nd)
+ecats=range(nd)
 eb = ebath(ecats,T,mdrun.dt,mdrun.nmd,wmax=1.,nw=500,bias=0.0,efric=eta)
 mdrun.AddBath(eb)
 #----------------------------------------------------
