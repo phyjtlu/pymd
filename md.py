@@ -4,7 +4,8 @@ import sys,time
 import os.path
 import numpy as N
 from numpy import linalg as LA
-import Scientific.IO.NetCDF as nc
+#import Scientific.IO.NetCDF as nc
+from netCDF4 import Dataset
 
 import units as U
 from matrix import *
@@ -84,6 +85,12 @@ class md:
             #number of system atoms
             self.na = len(syslist)
             #number of system degrees of freedom
+            self.nph = 3*len(syslist)
+        elif xyz is not None:
+            #set using xyz
+            #all are system atoms
+            self.syslist = N.array(range(len(xyz)),dtype='int')
+            self.na = len(syslist)
             self.nph = 3*len(syslist)
         else:
             self.syslist = None
@@ -437,6 +444,8 @@ class md:
         8Nov2018:
         Now we have the following 4 drivers:
             Siesta, Brenner, Lammps, harmonic
+        
+        q is an array of displacements of the atoms in self.syslist
         """
         #self.q0 and f0 are the displacment and
         #force of last call. If the displacement
@@ -459,14 +468,14 @@ class md:
             for i in range(len(f)/3):
                 f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
         #use brenner force 
-        else if self.brennerrun is not None:
+        elif self.brennerrun is not None:
             f=self.brennerrun.force(q)
         #use lammps force 
-        else if  self.lammpsrun is not None:
+        elif  self.lammpsrun is not None:
             #to be implemented
             f=self.lammpsrun.force(q)
         #use dynamical matrix 
-        else if self.dyn is not None:
+        elif self.dyn is not None:
             f=-mdot(self.dyn,q)
         else:
             print "no driver, no md"
@@ -499,6 +508,11 @@ class md:
         self.brennerrun = bint
 
 
+    def AddLMPint(self,lint):
+        """
+        add Lammps instance
+        """
+        self.lammpsrun = lint
 
 
     def Run(self):

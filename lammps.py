@@ -105,7 +105,7 @@ class lammps(object):
 #<<<<<<< master
 #    def __init__(self, infile, label="", mesh=100., dmtol=0.001, \
 #=======
-    def __init__(self, label, infile, \
+    def __init__(self, infile, label="", \
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
                  name="", cmdargs=None, ptr=None, comm=None
                  ):
@@ -258,8 +258,7 @@ class lammps(object):
                 self.lmp = c_void_p(pythonapi.PyCObject_AsVoidPtr(ptr))
 
         # optional numpy support (lazy loading)
-        self._numpy = None
-
+        self._numpy = None 
         # set default types
         self.c_bigint = get_ctypes_int(self.extract_setting("bigint"))
         self.c_tagint = get_ctypes_int(self.extract_setting("tagint"))
@@ -271,6 +270,10 @@ class lammps(object):
         self.label = label
         self.lunit = lunit
         self.eunit = eunit
+
+
+        #start lammps
+        self.start()
 
     def start(self, np=1):
         print("lammps launched")
@@ -290,6 +293,7 @@ class lammps(object):
         self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
                                          for mass in self.els]).flatten()
         self.number = self.get_natoms()
+        #<<<<<<< Updated upstream
 #<<<<<<< master
 #=======
 
@@ -303,6 +307,31 @@ class lammps(object):
 #                   #                        for a in self.els]).flatten()
 #        self.conv = 1.
 #>>>>>>> master
+#=======
+
+        #conversion factor from eV/Ang (force from lammps)
+        #to the intermal unit of MD
+        #todo
+        #self.els = self.extract_atom("mass",2)
+        #self.els = self.gather_atoms("mass",1,1)
+        #print("self.els:",self.els[1])
+        #self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(AtomicMassTable[a])]\
+                   #                        for a in self.els]).flatten()
+        #self.conv = 1.
+
+
+        self.type = N.array(self.gather_atoms("type", 0, 1))
+        #self.mass = N.array(self.gather_atoms("mass",1,1))
+        self.mass = self.extract_atom("mass",2)
+        self.els = []
+        for type in self.type:
+            self.els.append(self.mass[type])
+        self.xyz = self.gather_atoms("x", 1, 3)
+        self.newxyz = self.gather_atoms("x", 1, 3)
+        self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
+                                         for mass in self.els]).flatten()
+
+        #print(self.conv.shape)
         self.initforce()
 
     def quit(self):
