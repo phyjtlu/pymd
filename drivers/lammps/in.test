@@ -5,6 +5,7 @@ atom_style full
 read_data test.dat 
 
 pair_style rebo 
-pair_coeff * * /opt/lammps/potentials/CH.airebo C
+pair_coeff * * /home/jtlu/Downloads/soft/LAMMPS/lammps-stable_22Aug2018/potentials/CH.airebo C
+
 
 run 10 

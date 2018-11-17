@@ -57,9 +57,11 @@ class md:
     """
     def __init__(self,dt,nmd,T,syslist=None,xyz=None,harmonic=False,\
                  dyn=None,savepq=True,nrep=1,npie=8,constr=None):
-
+        #drivers
         self.sint = None #siesta instance
         self.brennerrun=None
+        self.lammpsrun=None
+
         self.constraint=constr
         self.nrep=nrep
         self.dt,self.nmd = dt,nmd
@@ -398,10 +400,9 @@ class md:
             self.f0=f
             return f
 
-    #Tue's version including brenner
     def potforce(self,q):
         """
-        potential force
+        Tue's version including brenner
         """
         if sameq(q,self.q0):
             return self.f0
@@ -429,6 +430,53 @@ class md:
             self.q0=q
             self.f0=f
             return f
+
+    def potforce(self,q):
+        """
+        Potential force from drivers
+        8Nov2018:
+        Now we have the following 4 drivers:
+            Siesta, Brenner, Lammps, harmonic
+        """
+        #self.q0 and f0 are the displacment and
+        #force of last call. If the displacement
+        #did not change, use the old force.
+        if sameq(q,self.q0):
+            return self.f0
+
+        #search for possible drivers
+        #use siesta force 
+        if self.sint is not None:
+            slist=self.syslist
+            if len(q)/3 != len(slist):
+                print "md:potforce: length error!"
+                sys.exit()
+            extq = N.zeros(len(self.xyz))
+            for i in range(len(slist)):
+                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
+            fa = self.sint.force(extq)
+            f = N.zeros(len(q))
+            for i in range(len(f)/3):
+                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
+        #use brenner force 
+        else if self.brennerrun is not None:
+            f=self.brennerrun.force(q)
+        #use lammps force 
+        else if  self.lammpsrun is not None:
+            #to be implemented
+            f=self.lammpsrun.force(q)
+        #use dynamical matrix 
+        else if self.dyn is not None:
+            f=-mdot(self.dyn,q)
+        else:
+            print "no driver, no md"
+            sys.exit()
+
+        #save 
+        self.q0=q
+        self.f0=f
+        return f
+
 
     def AddSint(self,sint):
         """
