@@ -362,7 +362,8 @@ class lammps(object):
         self.f0 = self.absforce(extq)
 
     def force(self, q):
-        return self.absforce(q) - self.f0
+        f = self.absforce(q) - self.f0
+        return f
 
 
 

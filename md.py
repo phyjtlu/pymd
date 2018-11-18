@@ -454,27 +454,29 @@ class md:
         if sameq(q,self.q0):
             return self.f0
 
+        if len(q)/3 != len(self.syslist):
+            print "md:potforce: length error!"
+            sys.exit()
+        extq = N.zeros(len(self.xyz))
+        for i in range(len(self.syslist)):
+            extq[3*self.syslist[i]:3*(self.syslist[i]+1)] = q[3*i:3*(i+1)]
+
         #search for possible drivers
         #use siesta force 
         if self.sint is not None:
-            slist=self.syslist
-            if len(q)/3 != len(slist):
-                print "md:potforce: length error!"
-                sys.exit()
-            extq = N.zeros(len(self.xyz))
-            for i in range(len(slist)):
-                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
             fa = self.sint.force(extq)
             f = N.zeros(len(q))
             for i in range(len(f)/3):
-                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
+                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
         #use brenner force 
         elif self.brennerrun is not None:
             f=self.brennerrun.force(q)
         #use lammps force 
         elif  self.lammpsrun is not None:
-            #to be implemented
-            f=self.lammpsrun.force(q)
+            fa=self.lammpsrun.force(extq)
+            f = N.zeros(len(q))
+            for i in range(len(f)/3):
+                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
         #use dynamical matrix 
         elif self.dyn is not None:
             f=-mdot(self.dyn,q)
@@ -626,7 +628,6 @@ class md:
                 else:
                     f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
             f.close()
-
 
     def dump(self,ipie,id):
         """

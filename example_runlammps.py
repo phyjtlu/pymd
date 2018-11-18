@@ -17,9 +17,9 @@ from myio import *
 T = 4.2
 nrep = 1
 #time = 0.658fs #time unit
-dt = 0.15
+dt = 0.5
 #number of md steps
-nmd = 2**10
+nmd = 2**14
 #transiesta run dir,
 #where to find default settings, and relaxed structure *.XV
 #SDir="../CGrun/"
@@ -29,7 +29,9 @@ nmd = 2**10
 #-------------------------------------------------------------------------------------
 #initialise lammps run
 lmp = lammps(infile='in.test')
-print lmp.els
+#
+lmp.f0 = lmp.f0*0.0
+#print lmp.els
 #forces...
 #q is 1d array made from 
 #the displacement from equilibrium in unit of 0.06466 Ang., 
@@ -37,6 +39,7 @@ print lmp.els
 q=N.zeros(len(lmp.xyz))
 print q
 lmp.force(q)
+
 #-------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------
@@ -52,9 +55,19 @@ for i,a in enumerate(lmp.els):
 print ("axyz:",axyz)
 
 
+#we fix the 1st atom
+#constraint is a list of vectors.
+#the force on along each vector is zerofied in md run
+constraint = []
+for i in range(3*2):
+    tmp = N.zeros(len(lmp.xyz))
+    tmp[i]=1.0
+    constraint.append(tmp)
+print ("constraint:",constraint)
+
 
 #if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1)
+mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1,constr=constraint)
 #attache lammps driver to md
 mdrun.AddLMPint(lmp)
 #--------------------------------------------------------------------------------------
