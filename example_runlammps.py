@@ -15,7 +15,7 @@ from myio import *
 #-------------------------------------------------------------------------------------
 #temperature
 T = 4.2
-nrep = 16
+nrep = 1
 #time = 0.658fs #time unit
 dt = 0.15
 #number of md steps
