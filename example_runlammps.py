@@ -40,22 +40,21 @@ lmp.force(q)
 #-------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------
-#def __init__(self,dt,nmd,T,syslist=None,xyz=None,harmonic=False,dyn=None,savepq=True):
 print "initialise md"
-#print md.__doc__
 
-#todo by LiGen: Need to initialize xyz:
-#
-#format of xyz:
+#Initialize axyz:
+#with the format:
 # [["C",0,0,0],["C",0,0,1.0]]
 #
-print ("els:",lmp.els)
-print ("xyz:",lmp.xyz[:])
+axyz = []
+for i,a in enumerate(lmp.els):
+    axyz.append([get_atomname(a),lmp.xyz[i*3],lmp.xyz[i*3+1],lmp.xyz[i*3+2]])
+print ("axyz:",axyz)
 
 
 
 #if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,slist,xyz,nrep=nrep,npie=1)
+mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1)
 #attache lammps driver to md
 mdrun.AddLMPint(lmp)
 #--------------------------------------------------------------------------------------
@@ -67,13 +66,15 @@ mdrun.AddLMPint(lmp)
 gamma = 10**-5
 nd=len(lmp.xyz)
 eta=gamma*N.identity(nd,N.float)
+print("eta:",eta)
 #--------------------------------------------------------------------------------------
-#----------------------------------------------------
+
+#-----------------------------------------------------------------------
 #atom indices that are connecting to debyge bath
-ecats=range(nd)
+ecats=range(nd/3)
 eb = ebath(ecats,T,mdrun.dt,mdrun.nmd,wmax=1.,nw=500,bias=0.0,efric=eta)
 mdrun.AddBath(eb)
-#----------------------------------------------------
+#----------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
 #MD

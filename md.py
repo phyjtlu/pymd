@@ -56,7 +56,7 @@ class md:
 
 
     """
-    def __init__(self,dt,nmd,T,syslist=None,xyz=None,harmonic=False,\
+    def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
                  dyn=None,savepq=True,nrep=1,npie=8,constr=None):
         #drivers
         self.sint = None #siesta instance
@@ -73,7 +73,7 @@ class md:
 
 
         #var: xyz,nta,els
-        self.SetXyz(xyz)
+        self.SetXyz(axyz)
         #var: syslist,na,nph
         if syslist is not None:
             if(len(syslist) > self.nta or min(syslist) < 0 or \
@@ -86,12 +86,12 @@ class md:
             self.na = len(syslist)
             #number of system degrees of freedom
             self.nph = 3*len(syslist)
-        elif xyz is not None:
-            #set using xyz
+        elif axyz is not None:
+            #set using axyz
             #all are system atoms
-            self.syslist = N.array(range(len(xyz)),dtype='int')
-            self.na = len(syslist)
-            self.nph = 3*len(syslist)
+            self.syslist = N.array(range(len(axyz)),dtype='int')
+            self.na = len(self.syslist)
+            self.nph = 3*len(self.syslist)
         else:
             self.syslist = None
             self.na = None
@@ -184,12 +184,12 @@ class md:
     def SetHarm(self,harmonic):
         self.harmonic = harmonic
 
-    def SetXyz(self,xyz):
-        if xyz is not None:
+    def SetXyz(self,axyz):
+        if axyz is not None:
             print "md.SetXyz:Seting xyz and nta"
-            self.xyz = N.array([a[1:] for a in xyz],dtype='d').flatten()
-            self.els = [a[0] for a in xyz]
-            self.nta = len(xyz)
+            self.xyz = N.array([a[1:] for a in axyz],dtype='d').flatten()
+            self.els = [a[0] for a in axyz]
+            self.nta = len(axyz)
         else:
             self.xyz = None
             self.els = None
@@ -316,6 +316,7 @@ class md:
         """
         #print "velocity-verlet integrator"
         t,p,q = self.t,self.p,self.q
+        t = int(t)
         if self.savepq:
             self.ps[t%self.nmd] = p
             self.qs[t%self.nmd] = q
@@ -617,10 +618,13 @@ class md:
             #f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.power)):
                 #only write out power spectrum upto 1.5max(hw)
-                if(self.power[i,0] < 1.5*max(self.hw)):
-                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                if self.hw is not None:
+                    if(self.power[i,0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                    else:
+                        break
                 else:
-                    break
+                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
             f.close()
 
 
@@ -629,7 +633,7 @@ class md:
         dump md information
         """
         outfile="MD"+str(id)+".nc"
-        NCfile = nc.NetCDFFile(outfile,'w','Created '+time.ctime(time.time()))
+        NCfile = Dataset(outfile,'w','Created '+time.ctime(time.time()))
         NCfile.title = 'Output from md.py'
         NCfile.createDimension('nph',self.nph)
         NCfile.createDimension('one',1)
@@ -685,7 +689,7 @@ def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
 
 def ReadNetCDFVar(file,var):
     print "ReadNetCDFFile: reading "+ var
-    f = nc.NetCDFFile(file,'r')
+    f = Dataset(file,'r')
     vv=N.array(f.variables[var])
     f.close()
     return vv

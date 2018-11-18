@@ -72,6 +72,14 @@ AtomicMassTable={'H':1.00794, 'He':4.002602, 'Li':6.941, 'Be':9.012182, \
     'Mt':276, 'Ds':281, 'Rg':280, 'Cn':285, 'Uut':284, \
     'Uuq':289, 'Uup':288, 'Uuh':293, 'Uus':294, 'Uuo':294}
 
+def get_atomname(mass):
+    """
+    get the element name from its atomic mass by checking the dictionary
+    """
+    for key, value in AtomicMassTable.items():
+        if abs(mass-value) < 0.01:
+            return key
+
 #>>>>>>> master
 def get_ctypes_int(size):
     if size == 4:
