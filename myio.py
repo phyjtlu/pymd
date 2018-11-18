@@ -1,6 +1,6 @@
 #!/applications/mbrsoft/bin/python
 
-import Scientific.IO.NetCDF as nc
+from netCDF4 import Dataset
 import numpy as N
 import numpy.linalg as LA
 from Inelastica import MakeGeom as MG
@@ -150,7 +150,7 @@ def ReadEPHNCFile(filename):
     class eph:
         pass
 
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     # General attributes
@@ -177,7 +177,7 @@ def ReadNewEPHNCFile(filename):
     class eph:
         pass
 
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     # General attributes
@@ -200,7 +200,7 @@ def WriteEPHNCfile(filename,wl,hw,U,DynMat,SigL,SigR,Friction,NC,NCP,zeta1,zeta2
     """
     Write a NetCDF file contains information for harmonic analysis
     """
-    fn=nc.NetCDFFile(filename,'w')
+    fn=Dataset(filename,'w')
     print 'Writing to %s' %filename
     dhw=len(hw)
     dwl=len(wl)
@@ -242,7 +242,7 @@ def ReadMDNCFile(filename):
     class mdmath:
         pass
 
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     # General attributes
@@ -263,7 +263,7 @@ def ReadDynmat(filename,order=None):
     
     order:  new order of atoms in siesta index
     """
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     hw= N.array(file.variables['hw'])
@@ -299,7 +299,7 @@ def ReadSig(filename):
     """
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     class eph:
@@ -317,7 +317,7 @@ def ReadwbLambda(filename,order=None):
     """
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     mus=N.array(file.variables['muLR'])
@@ -336,7 +336,7 @@ def ReadLambda(filename,w0,order=None):
     """
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
-    file = nc.NetCDFFile(filename,'r')
+    file = Dataset(filename,'r')
     print 'Reading from %s' % filename
 
     # General attributes

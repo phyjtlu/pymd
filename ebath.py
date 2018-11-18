@@ -4,7 +4,7 @@ import sys
 import numpy as N
 from noise import *
 from functions import *
-import Scientific.IO.NetCDF as nc
+from netCDF4 import Dataset
 
 
 class ebath:
@@ -229,7 +229,8 @@ if __name__=="__main__":
         class eph:
             pass
     
-        file = nc.NetCDFFile(filename,'r')
+        #file = nc.NetCDFFile(filename,'r')
+        file = Dataset(filename,'r')
         print 'Reading from %s' % filename
     
         # General attributes

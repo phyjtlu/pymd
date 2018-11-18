@@ -4,7 +4,8 @@ import sys,time
 import os.path
 import numpy as N
 from numpy import linalg as LA
-import Scientific.IO.NetCDF as nc
+#import Scientific.IO.NetCDF as nc
+from netCDF4 import Dataset
 
 import units as U
 from matrix import *
@@ -55,7 +56,7 @@ class md:
 
 
     """
-    def __init__(self,dt,nmd,T,syslist=None,xyz=None,harmonic=False,\
+    def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
                  dyn=None,savepq=True,nrep=1,npie=8,constr=None):
         #drivers
         self.sint = None #siesta instance
@@ -72,7 +73,7 @@ class md:
 
 
         #var: xyz,nta,els
-        self.SetXyz(xyz)
+        self.SetXyz(axyz)
         #var: syslist,na,nph
         if syslist is not None:
             if(len(syslist) > self.nta or min(syslist) < 0 or \
@@ -85,6 +86,12 @@ class md:
             self.na = len(syslist)
             #number of system degrees of freedom
             self.nph = 3*len(syslist)
+        elif axyz is not None:
+            #set using axyz
+            #all are system atoms
+            self.syslist = N.array(range(len(axyz)),dtype='int')
+            self.na = len(self.syslist)
+            self.nph = 3*len(self.syslist)
         else:
             self.syslist = None
             self.na = None
@@ -177,12 +184,12 @@ class md:
     def SetHarm(self,harmonic):
         self.harmonic = harmonic
 
-    def SetXyz(self,xyz):
-        if xyz is not None:
+    def SetXyz(self,axyz):
+        if axyz is not None:
             print "md.SetXyz:Seting xyz and nta"
-            self.xyz = N.array([a[1:] for a in xyz],dtype='d').flatten()
-            self.els = [a[0] for a in xyz]
-            self.nta = len(xyz)
+            self.xyz = N.array([a[1:] for a in axyz],dtype='d').flatten()
+            self.els = [a[0] for a in axyz]
+            self.nta = len(axyz)
         else:
             self.xyz = None
             self.els = None
@@ -309,6 +316,7 @@ class md:
         """
         #print "velocity-verlet integrator"
         t,p,q = self.t,self.p,self.q
+        t = int(t)
         if self.savepq:
             self.ps[t%self.nmd] = p
             self.qs[t%self.nmd] = q
@@ -437,6 +445,8 @@ class md:
         8Nov2018:
         Now we have the following 4 drivers:
             Siesta, Brenner, Lammps, harmonic
+        
+        q is an array of displacements of the atoms in self.syslist
         """
         #self.q0 and f0 are the displacment and
         #force of last call. If the displacement
@@ -444,29 +454,31 @@ class md:
         if sameq(q,self.q0):
             return self.f0
 
+        if len(q)/3 != len(self.syslist):
+            print "md:potforce: length error!"
+            sys.exit()
+        extq = N.zeros(len(self.xyz))
+        for i in range(len(self.syslist)):
+            extq[3*self.syslist[i]:3*(self.syslist[i]+1)] = q[3*i:3*(i+1)]
+
         #search for possible drivers
         #use siesta force 
         if self.sint is not None:
-            slist=self.syslist
-            if len(q)/3 != len(slist):
-                print "md:potforce: length error!"
-                sys.exit()
-            extq = N.zeros(len(self.xyz))
-            for i in range(len(slist)):
-                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
             fa = self.sint.force(extq)
             f = N.zeros(len(q))
             for i in range(len(f)/3):
-                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
+                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
         #use brenner force 
-        else if self.brennerrun is not None:
+        elif self.brennerrun is not None:
             f=self.brennerrun.force(q)
         #use lammps force 
-        else if  self.lammpsrun is not None:
-            #to be implemented
-            f=self.lammpsrun.force(q)
+        elif  self.lammpsrun is not None:
+            fa=self.lammpsrun.force(extq)
+            f = N.zeros(len(q))
+            for i in range(len(f)/3):
+                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
         #use dynamical matrix 
-        else if self.dyn is not None:
+        elif self.dyn is not None:
             f=-mdot(self.dyn,q)
         else:
             print "no driver, no md"
@@ -499,6 +511,11 @@ class md:
         self.brennerrun = bint
 
 
+    def AddLMPint(self,lint):
+        """
+        add Lammps instance
+        """
+        self.lammpsrun = lint
 
 
     def Run(self):
@@ -603,19 +620,21 @@ class md:
             #f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.power)):
                 #only write out power spectrum upto 1.5max(hw)
-                if(self.power[i,0] < 1.5*max(self.hw)):
-                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                if self.hw is not None:
+                    if(self.power[i,0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                    else:
+                        break
                 else:
-                    break
+                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
             f.close()
-
 
     def dump(self,ipie,id):
         """
         dump md information
         """
         outfile="MD"+str(id)+".nc"
-        NCfile = nc.NetCDFFile(outfile,'w','Created '+time.ctime(time.time()))
+        NCfile = Dataset(outfile,'w','Created '+time.ctime(time.time()))
         NCfile.title = 'Output from md.py'
         NCfile.createDimension('nph',self.nph)
         NCfile.createDimension('one',1)
@@ -671,7 +690,7 @@ def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
 
 def ReadNetCDFVar(file,var):
     print "ReadNetCDFFile: reading "+ var
-    f = nc.NetCDFFile(file,'r')
+    f = Dataset(file,'r')
     vv=N.array(f.variables[var])
     f.close()
     return vv
