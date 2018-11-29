@@ -19,7 +19,7 @@ nrep = 1
 #time = 0.658fs #time unit
 dt = 0.5
 #number of md steps
-nmd = 2**14
+nmd = 1000
 #transiesta run dir,
 #where to find default settings, and relaxed structure *.XV
 #SDir="../CGrun/"
@@ -28,7 +28,8 @@ nmd = 2**14
 
 #-------------------------------------------------------------------------------------
 #initialise lammps run
-lmp = lammps(infile='in.test')
+args = "-screen none"
+lmp = lammps(infile='in.test',cmdargs=args.split())
 #
 lmp.f0 = lmp.f0*0.0
 #print lmp.els
@@ -67,7 +68,7 @@ print ("constraint:",constraint)
 
 
 #if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1,constr=constraint)
+mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1)
 #attache lammps driver to md
 mdrun.AddLMPint(lmp)
 #--------------------------------------------------------------------------------------
@@ -86,7 +87,7 @@ print("eta:",eta)
 #atom indices that are connecting to debyge bath
 ecats=range(nd/3)
 eb = ebath(ecats,T,mdrun.dt,mdrun.nmd,wmax=1.,nw=500,bias=0.0,efric=eta)
-mdrun.AddBath(eb)
+#mdrun.AddBath(eb)
 #----------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------

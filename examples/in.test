@@ -6,6 +6,3 @@ read_data test.dat
 
 pair_style rebo 
 pair_coeff * * /opt/lammps/potentials/CH.airebo C
-
-
-run 10 
