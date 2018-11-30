@@ -1,4 +1,4 @@
-qs=ncread('../../MD0.nc','qs');
+qs=ncread('../MD0.nc','qs');
 qs2lmp=qs*0.01865707;
 
 for i=1:1000

@@ -1,4 +1,6 @@
 *.pyc
 *.xyz
 log.lammps
-MolecularJunction
+*.nc
+power*
+kappa*
