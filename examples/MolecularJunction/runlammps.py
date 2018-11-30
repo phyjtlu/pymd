@@ -20,7 +20,7 @@ nrep = 1
 # time = 0.658fs #time unit
 dt = 0.5
 # number of md steps
-nmd = 100
+nmd = 10**4
 # transiesta run dir,
 # where to find default settings, and relaxed structure *.XV
 # SDir="../CGrun/"
@@ -60,14 +60,23 @@ for i, a in enumerate(lmp.els):
 # constraint is a list of vectors.
 # the force on along each vector is zerofied in md run
 constraint = []
-for i in range(3*2):
+for i in range(3*64):
     tmp = N.zeros(len(lmp.xyz))
     tmp[i] = 1.0
     constraint.append(tmp)
+
+for i in range(len(lmp.xyz)-3*64*2):
+    tmp = N.zeros(len(lmp.xyz))
+    constraint.append(tmp)
+
+for i in range(3*64):
+    tmp = N.zeros(len(lmp.xyz))
+    tmp[len(lmp.xyz)-i] = 1.0
+    constraint.append(tmp)    
 #print ("constraint:", constraint)
 
 # if slist is not given, md will initialize it using xyz
-mdrun = md(dt, nmd, T, syslist=None, axyz=axyz, nrep=nrep, npie=1)
+mdrun = md(dt, nmd, T, syslist=None, axyz=axyz, nrep=nrep, npie=1,constr=constraint)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
 # --------------------------------------------------------------------------------------

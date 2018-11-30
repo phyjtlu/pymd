@@ -4,3 +4,4 @@ log.lammps
 *.nc
 power*
 kappa*
+*00K
