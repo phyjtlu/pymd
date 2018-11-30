@@ -35,7 +35,7 @@ lmp.f0 = lmp.f0*0.0
 #print lmp.els
 #forces...
 #q is 1d array made from 
-#the displacement from equilibrium in unit of 0.06466 Ang., 
+#the displacement from equilibrium in unit of lmp.conv * 0.06466 Ang., 
 #which is the internal unit of md
 q=N.zeros(len(lmp.xyz))
 print q
