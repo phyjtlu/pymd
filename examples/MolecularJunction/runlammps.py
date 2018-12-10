@@ -15,12 +15,12 @@ from myio import *
 
 # -------------------------------------------------------------------------------------
 # temperature
-T = 300
+T = 1000
 nrep = 1
 # time = 0.658fs #time unit
-dt = 0.5
+dt = 0.25/0.658
 # number of md steps
-nmd = 10**4
+nmd = 10**2
 # transiesta run dir,
 # where to find default settings, and relaxed structure *.XV
 # SDir="../CGrun/"
@@ -54,26 +54,73 @@ axyz = []
 for i, a in enumerate(lmp.els):
     axyz.append([get_atomname(a), lmp.xyz[i*3],
                  lmp.xyz[i*3+1], lmp.xyz[i*3+2]])
-#print ("axyz:", axyz)
+print ("axyz:", axyz)
 
 # we fix the 1st atom
 # constraint is a list of vectors.
 # the force on along each vector is zerofied in md run
 constraint = []
-for i in range(3*64):
+
+fixatoms=[]
+fixatoms.extend(range(0*3,(7+1)*3))
+fixatoms.extend(range(40*3,(55+1)*3))
+fixatoms.extend(range(88*3,(103+1)*3))
+fixatoms.extend(range(136*3,(151+1)*3))
+fixatoms.extend(range(184*3,(199+1)*3))
+fixatoms.extend(range(232*3,(247+1)*3))
+fixatoms.extend(range(280*3,(295+1)*3))
+fixatoms.extend(range(328*3,(343+1)*3))
+fixatoms.extend(range(376*3,(391+1)*3))
+fixatoms.extend(range(424*3,(431+1)*3))
+
+for i in fixatoms:
     tmp = N.zeros(len(lmp.xyz))
     tmp[i] = 1.0
     constraint.append(tmp)
 
-for i in range(len(lmp.xyz)-3*64*2):
-    tmp = N.zeros(len(lmp.xyz))
-    constraint.append(tmp)
+print ("constraint:", constraint)
 
-for i in range(3*64):
-    tmp = N.zeros(len(lmp.xyz))
-    tmp[len(lmp.xyz)-i] = 1.0
-    constraint.append(tmp)    
-#print ("constraint:", constraint)
+slist=[]
+slist.extend(range(22,25+1))
+slist.extend(range(70,73+1))
+slist.extend(range(118,121+1))
+slist.extend(range(166,169+1))
+slist.extend(range(214,217+1))
+slist.extend(range(262,265+1))
+slist.extend(range(310,313+1))
+slist.extend(range(358,361+1))
+slist.extend(range(406,409+1))
+slist.extend(range(432,480+1))
+
+# -----------------------------------------------------------------------
+# atom indices that are connecting to debyge bath
+ecatsl = []
+ecatsl.extend(range(8,21+1))
+ecatsl.extend(range(56,69+1))
+ecatsl.extend(range(104,117+1))
+ecatsl.extend(range(152,165+1))
+ecatsl.extend(range(200,213+1))
+ecatsl.extend(range(248,261+1))
+ecatsl.extend(range(296,309+1))
+ecatsl.extend(range(344,357+1))
+ecatsl.extend(range(392,405+1))
+
+ecatsr = []
+ecatsr.extend(range(26,39+1))
+ecatsr.extend(range(74,87+1))
+ecatsr.extend(range(122,135+1))
+ecatsr.extend(range(170,183+1))
+ecatsr.extend(range(218,231+1))
+ecatsr.extend(range(266,279+1))
+ecatsr.extend(range(314,327+1))
+ecatsr.extend(range(362,375+1))
+ecatsr.extend(range(410,423+1))
+
+dynamicatoms=slist+ecatsl+ecatsr
+dynamicatoms.sort()
+print "the following atoms are dynamic:\n"
+print dynamicatoms
+print len(dynamicatoms)
 
 # if slist is not given, md will initialize it using xyz
 mdrun = md(dt, nmd, T, syslist=None, axyz=axyz, nrep=nrep, npie=1,constr=constraint)
@@ -84,21 +131,19 @@ mdrun.AddLMPint(lmp)
 # --------------------------------------------------------------------------------------
 # debye bath
 # number of dynamical atoms
-gamma = 10**-5
-nd = len(lmp.xyz)
-eta = gamma*N.identity(nd, N.float)
-print("eta:", eta)
+gamma = 1.316423628402082*10**-2
+ndl = len(ecatsl)
+ndr = len(ecatsr)
+etal = gamma*N.identity(3*ndl, N.float)
+etar = gamma*N.identity(3*ndr, N.float)
+#print("eta:", eta)
 # --------------------------------------------------------------------------------------
-
-# -----------------------------------------------------------------------
-# atom indices that are connecting to debyge bath
-ecats = range(nd/3)
-ebl = ebath(ecats, T, mdrun.dt, mdrun.nmd,
-            wmax=1., nw=500, bias=0.0, efric=eta)
+ebl = ebath(ecatsl, T, mdrun.dt, mdrun.nmd,
+            wmax=1., nw=500, bias=0.0, efric=etal)
 mdrun.AddBath(ebl)
-#
-ebr = ebath(ecats, T, mdrun.dt, mdrun.nmd,
-            wmax=1., nw=500, bias=0.0, efric=eta)
+
+ebr = ebath(ecatsr, T, mdrun.dt, mdrun.nmd,
+            wmax=1., nw=500, bias=0.0, efric=etar)
 mdrun.AddBath(ebr)
 # ----------------------------------------------------------------------
 

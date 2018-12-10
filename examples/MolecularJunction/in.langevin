@@ -5,7 +5,9 @@ atom_style    full
 dimension     3
 boundary      p  p  p 
 
-variable     T     equal 200
+variable     T     equal 1000
+variable     Thot  equal ${T}*1.05
+variable     Tcold equal ${T}*0.95
 
 #Atom definition 
 
@@ -18,7 +20,7 @@ pair_coeff * * /opt/lammps/potentials/CH.airebo C H
 
 #Settings
 
-timestep 0.000329
+timestep   0.00025
 
 neighbor 1.0 bin
 neigh_modify  delay 5 every 1 check yes 
@@ -26,11 +28,12 @@ neigh_modify  delay 5 every 1 check yes
 #Region definition
 
 #define reg_all excluding fixed boundary
-region reg_all block      -0.028747258    63.871252742    -0.677382746    19.002617254   -0.744804367    14.255195633   units box
-region reg_0   block      -0.028747258    7.781752742     -0.677382746    19.002617254   -0.744804367    14.255195633   units box
-region reg_1   block      7.781752742     16.301752742    -0.677382746    19.002617254   -0.744804367    14.255195633   units box
-region reg_6   block      47.540752742    56.060752742    -0.677382746    19.002617254   -0.744804367    14.255195633   units box
-region reg_7   block      56.060752742    63.871252742    -0.677382746    19.002617254   -0.744804367    14.255195633   units box
+
+region reg_all block      -0.033604195    63.866395805    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
+region reg_0   block      -0.019996217    7.81     -0.581525648    21.558474352   -0.612027865    24.387972135    units box
+region reg_1   block      7.81     22.7201    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
+region reg_6   block      39.7604   54.6706    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
+region reg_7   block      54.6706    63.866395805    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
 #Group definition
 
 group g_0      region   reg_0
