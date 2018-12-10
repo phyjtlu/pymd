@@ -11,7 +11,7 @@ variable     Tcold equal ${T}*0.95
 
 #Atom definition 
 
-read_data  MJ14.data
+read_data  sMJ14.data
 
 #Force  field
 

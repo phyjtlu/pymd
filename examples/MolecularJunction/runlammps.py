@@ -61,17 +61,8 @@ print ("axyz:", axyz)
 # the force on along each vector is zerofied in md run
 constraint = []
 
-fixatoms=[]
-fixatoms.extend(range(0*3,(7+1)*3))
-fixatoms.extend(range(40*3,(55+1)*3))
-fixatoms.extend(range(88*3,(103+1)*3))
-fixatoms.extend(range(136*3,(151+1)*3))
-fixatoms.extend(range(184*3,(199+1)*3))
-fixatoms.extend(range(232*3,(247+1)*3))
-fixatoms.extend(range(280*3,(295+1)*3))
-fixatoms.extend(range(328*3,(343+1)*3))
-fixatoms.extend(range(376*3,(391+1)*3))
-fixatoms.extend(range(424*3,(431+1)*3))
+fixatoms=range(0*3,(71+1)*3)
+fixatoms.extend(range(409*3,(480+1)*3))
 
 for i in fixatoms:
     tmp = N.zeros(len(lmp.xyz))
@@ -80,41 +71,12 @@ for i in fixatoms:
 
 print ("constraint:", constraint)
 
-slist=[]
-slist.extend(range(22,25+1))
-slist.extend(range(70,73+1))
-slist.extend(range(118,121+1))
-slist.extend(range(166,169+1))
-slist.extend(range(214,217+1))
-slist.extend(range(262,265+1))
-slist.extend(range(310,313+1))
-slist.extend(range(358,361+1))
-slist.extend(range(406,409+1))
-slist.extend(range(432,480+1))
-
+#Molecular Junction atom indices
+slist=range(198,282+1)
 # -----------------------------------------------------------------------
 # atom indices that are connecting to debyge bath
-ecatsl = []
-ecatsl.extend(range(8,21+1))
-ecatsl.extend(range(56,69+1))
-ecatsl.extend(range(104,117+1))
-ecatsl.extend(range(152,165+1))
-ecatsl.extend(range(200,213+1))
-ecatsl.extend(range(248,261+1))
-ecatsl.extend(range(296,309+1))
-ecatsl.extend(range(344,357+1))
-ecatsl.extend(range(392,405+1))
-
-ecatsr = []
-ecatsr.extend(range(26,39+1))
-ecatsr.extend(range(74,87+1))
-ecatsr.extend(range(122,135+1))
-ecatsr.extend(range(170,183+1))
-ecatsr.extend(range(218,231+1))
-ecatsr.extend(range(266,279+1))
-ecatsr.extend(range(314,327+1))
-ecatsr.extend(range(362,375+1))
-ecatsr.extend(range(410,423+1))
+ecatsl = range(72,197+1)
+ecatsr = range(283,408+1)
 
 dynamicatoms=slist+ecatsl+ecatsr
 dynamicatoms.sort()
