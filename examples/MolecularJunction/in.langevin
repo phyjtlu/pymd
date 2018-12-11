@@ -11,56 +11,57 @@ variable     Tcold equal ${T}*0.95
 
 #Atom definition 
 
-read_data  sMJ14.data
+read_data  OptimizationMJ.data
 
 #Force  field
 
 pair_style   rebo
 pair_coeff * * /opt/lammps/potentials/CH.airebo C H 
 
-#Settings
-
-timestep   0.00025
-
-neighbor 1.0 bin
-neigh_modify  delay 5 every 1 check yes 
-
-#Region definition
-
-#define reg_all excluding fixed boundary
-
-region reg_all block      -0.033604195    63.866395805    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
-region reg_0   block      -0.019996217    7.81     -0.581525648    21.558474352   -0.612027865    24.387972135    units box
-region reg_1   block      7.81     22.7201    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
-region reg_6   block      39.7604   54.6706    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
-region reg_7   block      54.6706    63.866395805    -0.581525648    21.558474352   -0.612027865    24.387972135    units box
-#Group definition
-
-group g_0      region   reg_0
-group g_1      region   reg_1
-group g_6      region   reg_6
-group g_7      region   reg_7
-group g_all    region   reg_all
-group g_NVE    subtract g_all g_0 g_1 g_6 g_7 
-group g_NVT    subtract g_all g_0 g_7
-
-# Put fixed boundary condition on edge atoms by setting forces to zero
-
-fix g_0 g_0 setforce 0 0 0
-fix g_7 g_7 setforce 0 0 0
-
-velocity  g_NVT  create  $T 87287 mom yes rot yes dist gaussian 
-
-#Define compute for temperature calculation 
-
-compute  1     all    temp/region   reg_1
-compute  6     all    temp/region   reg_6
-
-fix g_l g_1 setforce 0 0 0 
-fix g_r g_6 setforce 0 0 0 
-
-min_style cg 
-minimize 1e-25 1e-25 5000 10000
-
-unfix g_l
-unfix g_r
+##Settings
+#
+#timestep   0.00025
+#
+#neighbor 1.0 bin
+#neigh_modify  delay 5 every 1 check yes 
+#
+##Region definition
+#
+##define reg_all excluding fixed boundary
+#
+#region reg_all block      0.000413685    65.455413685   -0.590935087    21.549064913   -0.699996656    24.300003344    units box
+#region reg_0   block      0.000413685    7.810056       -0.590935087    21.549064913   -0.699996656    24.300003344    units box
+#region reg_1   block      7.810056       22.7201        -0.590935087    21.549064913   -0.699996656    24.300003344    units box
+#region reg_6   block      41.2154        56.2256        -0.590935087    21.549064913   -0.699996656    24.300003344    units box
+#region reg_7   block      56.2256        65.455413685   -0.590935087    21.549064913   -0.699996656    24.300003344    units box
+##Group definition
+#
+#group g_0      region   reg_0
+#group g_1      region   reg_1
+#group g_6      region   reg_6
+#group g_7      region   reg_7
+#group g_all    region   reg_all
+#group g_NVE    subtract g_all g_0 g_1 g_6 g_7 
+#group g_NVT    subtract g_all g_0 g_7
+#
+## Put fixed boundary condition on edge atoms by setting forces to zero
+#
+#fix g_0 g_0 setforce 0 0 0
+#fix g_7 g_7 setforce 0 0 0
+#
+#velocity  g_NVT  create  $T 87287 mom yes rot yes dist gaussian 
+#
+##Define compute for temperature calculation 
+#
+#compute  1     all    temp/region   reg_1
+#compute  6     all    temp/region   reg_6
+#
+#fix g_l g_1 setforce 0 0 0 
+#fix g_r g_6 setforce 0 0 0 
+#
+#min_style cg 
+#minimize 1e-25 1e-25 5000 10000
+#
+#unfix g_l
+#unfix g_r
+#

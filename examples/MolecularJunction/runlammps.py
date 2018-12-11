@@ -38,8 +38,9 @@ lmp = lammps(infile='in.langevin', cmdargs=args.split())
 # the displacement from equilibrium in unit of lmp.conv * 0.06466 Ang.,
 # which is the internal unit of md
 q = N.zeros(len(lmp.xyz))
-print q
-print(lmp.force(q))
+print (q)
+print (lmp.f0)
+print (lmp.force(q))
 
 # -------------------------------------------------------------------------------------
 
@@ -56,13 +57,19 @@ for i, a in enumerate(lmp.els):
                  lmp.xyz[i*3+1], lmp.xyz[i*3+2]])
 print ("axyz:", axyz)
 
+fileObject = open('axyz.txt', 'w+')  
+for ip in axyz:  
+    fileObject.write(str(ip))
+    fileObject.write('\n')  
+fileObject.close() 
+
 # we fix the 1st atom
 # constraint is a list of vectors.
 # the force on along each vector is zerofied in md run
 constraint = []
 
-fixatoms=range(0*3,(71+1)*3)
-fixatoms.extend(range(409*3,(480+1)*3))
+fixatoms = range(0*3, (71+1)*3)
+fixatoms.extend(range(409*3, (480+1)*3))
 
 for i in fixatoms:
     tmp = N.zeros(len(lmp.xyz))
@@ -71,21 +78,22 @@ for i in fixatoms:
 
 print ("constraint:", constraint)
 
-#Molecular Junction atom indices
-slist=range(198,282+1)
+# Molecular Junction atom indices
+slist = range(198, 282+1)
 # -----------------------------------------------------------------------
 # atom indices that are connecting to debyge bath
-ecatsl = range(72,197+1)
-ecatsr = range(283,408+1)
+ecatsl = range(72, 197+1)
+ecatsr = range(283, 408+1)
 
-dynamicatoms=slist+ecatsl+ecatsr
+dynamicatoms = slist+ecatsl+ecatsr
 dynamicatoms.sort()
 print "the following atoms are dynamic:\n"
 print dynamicatoms
 print len(dynamicatoms)
 
 # if slist is not given, md will initialize it using xyz
-mdrun = md(dt, nmd, T, syslist=None, axyz=axyz, nrep=nrep, npie=1,constr=constraint)
+mdrun = md(dt, nmd, T, syslist=None, axyz=axyz,
+           nrep=nrep, npie=1, constr=constraint)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
 # --------------------------------------------------------------------------------------
