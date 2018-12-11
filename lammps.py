@@ -338,7 +338,10 @@ class lammps(object):
         self.newxyz = self.gather_atoms("x", 1, 3)
         self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
                                          for mass in self.els]).flatten()
-
+        self.axyz = []
+        for i, a in enumerate(self.els):
+            self.axyz.append([get_atomname(a), self.xyz[i*3],
+                         self.xyz[i*3+1], self.xyz[i*3+2]])
         #print(self.conv.shape)
         self.initforce()
 
