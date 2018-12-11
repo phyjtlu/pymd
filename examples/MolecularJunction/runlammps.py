@@ -20,7 +20,7 @@ nrep = 1
 # time = 0.658fs #time unit
 dt = 0.25/0.658
 # number of md steps
-nmd = 10**2
+nmd = 10**4
 # transiesta run dir,
 # where to find default settings, and relaxed structure *.XV
 # SDir="../CGrun/"
@@ -51,17 +51,11 @@ print "initialise md"
 # with the format:
 # [["C",0,0,0],["C",0,0,1.0]]
 #
-axyz = []
-for i, a in enumerate(lmp.els):
-    axyz.append([get_atomname(a), lmp.xyz[i*3],
-                 lmp.xyz[i*3+1], lmp.xyz[i*3+2]])
-print ("axyz:", axyz)
-
-fileObject = open('axyz.txt', 'w+')  
-for ip in axyz:  
-    fileObject.write(str(ip))
-    fileObject.write('\n')  
-fileObject.close() 
+#axyz = []
+#for i, a in enumerate(lmp.els):
+#    axyz.append([get_atomname(a), lmp.xyz[i*3],
+#                 lmp.xyz[i*3+1], lmp.xyz[i*3+2]])
+#print ("axyz:", axyz)
 
 # we fix the 1st atom
 # constraint is a list of vectors.
@@ -92,7 +86,7 @@ print dynamicatoms
 print len(dynamicatoms)
 
 # if slist is not given, md will initialize it using xyz
-mdrun = md(dt, nmd, T, syslist=None, axyz=axyz,
+mdrun = md(dt, nmd, T, conv=lmp.conv, syslist=None, axyz=lmp.axyz,
            nrep=nrep, npie=1, constr=constraint)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
@@ -108,11 +102,11 @@ etal = gamma*N.identity(3*ndl, N.float)
 etar = gamma*N.identity(3*ndr, N.float)
 #print("eta:", eta)
 # --------------------------------------------------------------------------------------
-ebl = ebath(ecatsl, T, mdrun.dt, mdrun.nmd,
+ebl = ebath(ecatsl, T*1.05, mdrun.dt, mdrun.nmd,
             wmax=1., nw=500, bias=0.0, efric=etal)
 mdrun.AddBath(ebl)
 
-ebr = ebath(ecatsr, T, mdrun.dt, mdrun.nmd,
+ebr = ebath(ecatsr, T*0.95, mdrun.dt, mdrun.nmd,
             wmax=1., nw=500, bias=0.0, efric=etar)
 mdrun.AddBath(ebr)
 # ----------------------------------------------------------------------

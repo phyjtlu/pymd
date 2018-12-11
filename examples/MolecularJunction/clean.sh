@@ -1,1 +1,1 @@
-rm *.pyc *.dat *.nc log.lammps
+rm *.pyc *.dat *.nc log.lammps *.ang

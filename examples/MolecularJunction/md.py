@@ -56,7 +56,7 @@ class md:
 
 
     """
-    def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
+    def __init__(self,dt,nmd,T,conv,syslist=None,axyz=None,harmonic=False,\
                  dyn=None,savepq=True,nrep=1,npie=8,constr=None):
         #drivers
         self.sint = None #siesta instance
@@ -122,6 +122,7 @@ class md:
 
         #var: ps,qs,power,savepq
         self.ResetSavepq(savepq)
+        self.conv = conv
 
     def info(self):
         print "--------------------------------------------\n"
@@ -354,6 +355,18 @@ class md:
 
         t=t+1
         self.t,self.p,self.q = t,ptt2,qtt
+
+        with open('OptimizationMJ'+str(self.t)+'.ang', 'w') as fileobject:
+            fileobject.write(str(len(self.els)))
+            fileobject.write('\n')
+            fileobject.write('Timestep'+'   '+str(self.t))
+            fileobject.write('\n')
+            for ip in range(len(self.els)):
+                fileobject.write(str(self.els[ip])+'    ')
+                fileobject.write(str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+' ')
+                fileobject.write(str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   ')
+                fileobject.write(str(self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   ')
+                fileobject.write('\n')   
 
     def force(self,t,p,q,id=0):
         """
