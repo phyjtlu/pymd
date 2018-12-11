@@ -70,6 +70,7 @@ class md:
         self.T=T
         self.npie=npie
         self.power = N.zeros((self.nmd,2))
+        self.power2 = N.zeros((self.nmd,2))
 
 
         #var: xyz,nta,els
@@ -310,6 +311,7 @@ class md:
             sys.exit()
         print "md.GetPower: generate power spectrum from trajectories!"
         self.power = powerspec(self.qs,self.dt,self.nmd)
+        self.power2 = powerspec2(self.ps,self.dt,self.nmd)
 
     def vv(self):
         """
@@ -561,6 +563,7 @@ class md:
                     self.qhis = ReadNetCDFVar(fn,'qhis')
                     self.phis = ReadNetCDFVar(fn,'phis')
                     self.power =ReadNetCDFVar(fn,'power')
+                    self.power2 =ReadNetCDFVar(fn,'power2')
                     if self.savepq:
                         self.qs = ReadNetCDFVar(fn,'qs')
                         self.ps = ReadNetCDFVar(fn,'ps')
@@ -570,6 +573,7 @@ class md:
                 elif(ipie+1 == self.npie):
                     print "finished run"
                     self.power =ReadNetCDFVar(fn,'power')
+                    self.power2 =ReadNetCDFVar(fn,'power2')
                     self.t = ReadNetCDFVar(fn,'t')[0]
                     continue
                 else:
@@ -608,9 +612,12 @@ class md:
 
             #power spectrum
             power=N.copy(self.power)
+            power2=N.copy(self.power2)
             self.GetPower()
             power=(power*j+self.power)/float(j+1)
+            power2=(power2*j+self.power2)/float(j+1)
             self.power=N.copy(power)
+            self.power2=N.copy(power2)
 
             #dump again, to make sure power is all right
             self.dump(i,j)
@@ -642,6 +649,21 @@ class md:
                     f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
             f.close()
 
+            #----------------------------------------------------------------
+            #power spectrum from velocity
+            #----------------------------------------------------------------
+            f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat","w")
+            for i in range(len(self.power2)):
+                #only write out power spectrum upto 1.5max(hw)
+                if self.hw is not None:
+                    if(self.power2[i,0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+                    else:
+                        break
+                else:
+                    f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+            f.close()
+
     def dump(self,ipie,id):
         """
         dump md information
@@ -650,6 +672,7 @@ class md:
         NCfile = Dataset(outfile,'w','Created '+time.ctime(time.time()))
         NCfile.title = 'Output from md.py'
         NCfile.createDimension('nph',self.nph)
+        #NCfile.createDimension('na',self.na)
         NCfile.createDimension('one',1)
         NCfile.createDimension('two',2)
         NCfile.createDimension('mem',self.ml)
@@ -658,6 +681,8 @@ class md:
         for i in range(len(self.baths)):
             NCfile.createDimension('n'+str(i),self.baths[i].nc)
 
+        #els
+        #Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
 
         #noise series
         for i in range(len(self.baths)):
@@ -674,6 +699,7 @@ class md:
 
         #power spectrum
         Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
+        Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
         #energy
         Write2NetCDFFile(NCfile,self.etot,'energy',('nnmd',),units='')
         #velocity

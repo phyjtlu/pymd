@@ -363,6 +363,7 @@ class lammps(object):
         print("Calculate zero displacement force")
         extq = N.zeros(3*self.number)
         self.f0 = self.absforce(extq)
+        #print(self.f0)
 
     def force(self, q):
         f = self.absforce(q) - self.f0

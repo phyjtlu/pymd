@@ -235,6 +235,13 @@ def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
     if units: tmp.units = units
     if description: tmp.description = description
 
+def ReadNetCDFVar(file,var):
+    print "ReadNetCDFFile: reading "+ var
+    f = Dataset(file,'r')
+    vv=N.array(f.variables[var])
+    f.close()
+    return vv
+
 def ReadMDNCFile(filename):
     """
     Reads a NetCDF file 
