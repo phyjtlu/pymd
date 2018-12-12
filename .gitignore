@@ -6,3 +6,7 @@ power*
 kappa*
 *00K
 *.ang
+runlammps.py
+in.langevin
+OptimizationMJ.data
+examples/MolecularJunction
