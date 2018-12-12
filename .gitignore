@@ -9,4 +9,3 @@ kappa*
 runlammps.py
 in.langevin
 OptimizationMJ.data
-examples/MolecularJunction

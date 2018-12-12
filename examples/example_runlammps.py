@@ -19,7 +19,7 @@ nrep = 1
 #time = 0.658fs #time unit
 dt = 0.5
 #number of md steps
-nmd = 1000
+nmd = 2**14
 #transiesta run dir,
 #where to find default settings, and relaxed structure *.XV
 #SDir="../CGrun/"
