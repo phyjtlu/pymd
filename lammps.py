@@ -80,6 +80,7 @@ def get_atomname(mass):
         if abs(mass-value) < 0.01:
             return key
 
+args = "-screen none"
 #>>>>>>> master
 def get_ctypes_int(size):
     if size == 4:
@@ -115,7 +116,7 @@ class lammps(object):
 #=======
     def __init__(self, infile, label="", \
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
-                 name="", cmdargs=None, ptr=None, comm=None
+                 name="", cmdargs=args.split(), ptr=None, comm=None
                  ):
         self.comm = comm
         self.opened = 0
