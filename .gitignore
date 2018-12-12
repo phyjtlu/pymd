@@ -1,11 +1,11 @@
 *.pyc
-*.xyz
 log.lammps
 *.nc
+*.xyz
 power*
 kappa*
 *00K
-*.ang
+*.ani
 runlammps.py
 in.langevin
 OptimizationMJ.data
