@@ -328,7 +328,7 @@ class md:
         self.power = powerspec(self.qs,self.dt,self.nmd)
         self.power2 = powerspec2(self.ps,self.dt,self.nmd)
 
-    def vv(self):
+    def vv(self,id):
         """
         velocity-verlet method integrator
         """
@@ -375,7 +375,7 @@ class md:
 #-------------------------------------------------------------------------------------
 #Add tracking of atomic trajectories by Li Gen.
         if self.t == 1 or self.t % self.nstep == 0:
-            with open('trajectories.ani', 'a') as fileobject:
+            with open('trajectories'+str(id)+'.ani', 'a') as fileobject:
             #with open('OptimizationMJ'+str(self.t)+'.ang', 'w') as fileobject:
                 fileobject.write(str(len(self.els)))
                 fileobject.write('\n')
@@ -627,7 +627,7 @@ class md:
             iss=ipie1+N.array(range(self.npie-ipie1))
             for i in iss:
                 for jj in range(self.nmd/self.npie):
-                    self.vv()
+                    self.vv(j)
                 self.dump(i,j)
 
             #power spectrum
