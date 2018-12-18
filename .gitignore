@@ -9,3 +9,4 @@ kappa*
 runlammps.py
 in.langevin
 OptimizationMJ.data
+examples/lammps-comparison
