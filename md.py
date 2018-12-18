@@ -375,7 +375,7 @@ class md:
 #-------------------------------------------------------------------------------------
 #Add tracking of atomic trajectories by Li Gen.
         if self.t == 1 or self.t % self.nstep == 0:
-            with open('trajectories'+str(self.T)+"."+str(id)+'.ani', 'a') as fileobject:
+            with open('trajectories'+"."+str(self.T)+"."+"run"+str(id)+'.ani', 'a') as fileobject:
             #with open('OptimizationMJ'+str(self.t)+'.ang', 'w') as fileobject:
                 fileobject.write(str(len(self.els)))
                 fileobject.write('\n')
