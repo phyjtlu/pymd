@@ -1,17 +1,19 @@
-#!/home/jtlu/anaconda2/bin/python
-#import matplotlib.pyplot as PP
-import sys, string, os, time, glob
-import numpy as N
-import numpy.linalg as LA
-
 from md import *
 from phbath import *
 from ebath import *
-from lammps import *
+from lammpsdriver import *
 from matrix import *
 from myio import *
 
-
+lammpsinfile=[
+"units       metal ",
+"dimension   3 ",
+"boundary    p p p ",
+"atom_style  full",
+"read_data   test.dat ",
+"pair_style  rebo ",
+"pair_coeff  * * /opt/lammps/potentials/CH.airebo C"
+]
 #-------------------------------------------------------------------------------------
 #temperature
 T = 4.2
@@ -25,35 +27,22 @@ nmd = 1000
 #SDir="../CGrun/"
 #-------------------------------------------------------------------------------------
 
-
-#-------------------------------------------------------------------------------------
 #initialise lammps run
-args = "-screen none"
-lmp = lammps(infile='in.test',cmdargs=args.split())
-#
+lmp = lammpsdriver(infile=lammpsinfile)
 lmp.f0 = lmp.f0*0.0
-#print lmp.els
+print(lmp.els)
 #forces...
 #q is 1d array made from 
 #the displacement from equilibrium in unit of 0.06466 Ang., 
 #which is the internal unit of md
-q=N.zeros(len(lmp.xyz))
-print q
+q = N.zeros(len(lmp.xyz))
+print(q)
 lmp.force(q)
 
 #-------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------
-print "initialise md"
-
-#Initialize axyz:
-#with the format:
-# [["C",0,0,0],["C",0,0,1.0]]
-#
-axyz = []
-for i,a in enumerate(lmp.els):
-    axyz.append([get_atomname(a),lmp.xyz[i*3],lmp.xyz[i*3+1],lmp.xyz[i*3+2]])
-print ("axyz:",axyz)
+print("initialise md")
 
 
 #we fix the 1st atom
@@ -64,11 +53,11 @@ for i in range(3*2):
     tmp = N.zeros(len(lmp.xyz))
     tmp[i]=1.0
     constraint.append(tmp)
-print ("constraint:",constraint)
+print("constraint:",constraint)
 
 
 #if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,syslist=None,axyz=axyz,nrep=nrep,npie=1)
+mdrun = md(dt,nmd,T,syslist=None,axyz=lmp.axyz,nrep=nrep,npie=1)
 #attache lammps driver to md
 mdrun.AddLMPint(lmp)
 #--------------------------------------------------------------------------------------
@@ -78,8 +67,8 @@ mdrun.AddLMPint(lmp)
 #debye bath
 #number of dynamical atoms
 gamma = 10**-5
-nd=len(lmp.xyz)
-eta=gamma*N.identity(nd,N.float)
+nd = len(lmp.xyz)
+eta = gamma*N.identity(nd,N.float)
 print("eta:",eta)
 #--------------------------------------------------------------------------------------
 

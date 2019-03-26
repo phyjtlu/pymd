@@ -28,7 +28,7 @@ class lammpsdriver(lammps):
                  constraints=[], tdir="./", lunit="Ang", eunit="eV", md2ang=0.06466, \
                  name="", cmdargs=args.split(), ptr=None, comm=None
                  ):
-        lammps.__init__(self, name="", cmdargs=None, ptr=None, comm=None)
+        lammps.__init__(self, name="", cmdargs=cmdargs, ptr=None, comm=None)
         self.infile = infile
         self.md2ang = md2ang
         self.constraints = constraints
@@ -43,8 +43,9 @@ class lammpsdriver(lammps):
         #todo:better to set the unit to metals here again
         self.command("units metal")
 
-        lines = open(self.infile, 'r').readlines()
-        for line in lines: self.command(line)
+        #lines = open(self.infile, 'r').readlines()
+        #for line in lines: self.command(line)
+        self.commands_list(self.infile)
         self.type = N.array(self.gather_atoms("type", 0, 1))
         #self.mass = N.array(self.gather_atoms("mass",1,1))
         self.mass = self.extract_atom("mass",2)
