@@ -25,4 +25,25 @@ def powerspec(qs,dt,nmd):
     return dos
 
 
+def powerspec2(ps,dt,nmd):
+    """
+    ps      list of trajectories, shape(nmd,nph)
+    dt      time step of MD simulation
+    nmd     number of MD steps
+    """
+    pst=N.transpose(N.array(ps))
+    nph,nmd2 = pst.shape
+    if nmd != nmd2:
+        print "power: ps shape error!"
+        sys.exit()
+    dw = 2.*N.pi/dt/nmd
+
+    fti = myfft(dt,nmd)
+    psw = N.array([fti.Fourier1D(a) for a in pst])
+    psw = N.real(N.transpose(psw*N.conjugate(psw)))
+    dos2 = N.array([[i*dw,N.sum(psw[i])/dt/nmd] for i in range(nmd)])
+    return dos2
+
+
+
 

@@ -38,12 +38,10 @@ print(lmp.els)
 q = N.zeros(len(lmp.xyz))
 print(q)
 lmp.force(q)
-
 #-------------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------------
 print("initialise md")
-
 
 #we fix the 1st atom
 #constraint is a list of vectors.
@@ -57,11 +55,10 @@ print("constraint:",constraint)
 
 
 #if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,syslist=None,axyz=lmp.axyz,nrep=nrep,npie=1)
+mdrun = md(dt,nmd,T,syslist=None,axyz=lmp.axyz,savepq=False,nrep=nrep,npie=1)
 #attache lammps driver to md
 mdrun.AddLMPint(lmp)
 #--------------------------------------------------------------------------------------
-
 
 #--------------------------------------------------------------------------------------
 #debye bath

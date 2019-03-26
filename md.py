@@ -53,11 +53,12 @@ class md:
         baths       List of baths connecting to the system
         fbaths      Force from all the baths at time t
         etot        total energy at each time step
+        nstep       Output atomic position after nstep MD 
 
 
     """
     def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
-                 dyn=None,savepq=True,nrep=1,npie=8,constr=None):
+                 dyn=None,savepq=True,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
         #drivers
         self.sint = None #siesta instance
         self.brennerrun=None
@@ -70,6 +71,7 @@ class md:
         self.T=T
         self.npie=npie
         self.power = N.zeros((self.nmd,2))
+        self.power2 = N.zeros((self.nmd,2))
 
 
         #var: xyz,nta,els
@@ -122,6 +124,21 @@ class md:
 
         #var: ps,qs,power,savepq
         self.ResetSavepq(savepq)
+#--------------------------------------------------------------
+#Add tracking of atomic trajectories by Li Gen.
+        self.md2ang = md2ang
+        self.mass = []
+        self.get_atommass()
+        self.conv = self.md2ang*N.array([3*[1.0/N.sqrt(mass)]
+                                         for mass in self.mass]).flatten()
+        self.nstep = nstep
+
+    def get_atommass(self):
+        for atomsname in self.els:
+            for key, value in U.AtomicMassTable.items():
+                if atomsname==key:
+                    self.mass.append(value)
+#--------------------------------------------------------------
 
     def info(self):
         print "--------------------------------------------\n"
@@ -309,8 +326,9 @@ class md:
             sys.exit()
         print "md.GetPower: generate power spectrum from trajectories!"
         self.power = powerspec(self.qs,self.dt,self.nmd)
+        self.power2 = powerspec2(self.ps,self.dt,self.nmd)
 
-    def vv(self):
+    def vv(self,id):
         """
         velocity-verlet method integrator
         """
@@ -354,6 +372,23 @@ class md:
 
         t=t+1
         self.t,self.p,self.q = t,ptt2,qtt
+#-------------------------------------------------------------------------------------
+#Add tracking of atomic trajectories by Li Gen.
+        if self.t == 1 or self.t % self.nstep == 0:
+            with open('trajectories'+"."+str(self.T)+"."+"run"+str(id)+'.ani', 'a') as fileobject:
+            #with open('OptimizationMJ'+str(self.t)+'.ang', 'w') as fileobject:
+                fileobject.write(str(len(self.els)))
+                fileobject.write('\n')
+                fileobject.write('Timestep'+'   '+str(self.t))
+                fileobject.write('\n')
+                for ip in range(len(self.els)):
+                    fileobject.write(str(self.els[ip])+'    ')
+                    fileobject.write(str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   ')
+                    fileobject.write(str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   ')
+                    fileobject.write(str(self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   ')
+                    fileobject.write('\n')
+                fileobject.write('\n')
+#-------------------------------------------------------------------------------------
 
     def force(self,t,p,q,id=0):
         """
@@ -548,6 +583,7 @@ class md:
                     self.qhis = ReadNetCDFVar(fn,'qhis')
                     self.phis = ReadNetCDFVar(fn,'phis')
                     self.power =ReadNetCDFVar(fn,'power')
+                    self.power2 =ReadNetCDFVar(fn,'power2')
                     if self.savepq:
                         self.qs = ReadNetCDFVar(fn,'qs')
                         self.ps = ReadNetCDFVar(fn,'ps')
@@ -557,6 +593,7 @@ class md:
                 elif(ipie+1 == self.npie):
                     print "finished run"
                     self.power =ReadNetCDFVar(fn,'power')
+                    self.power2 =ReadNetCDFVar(fn,'power2')
                     self.t = ReadNetCDFVar(fn,'t')[0]
                     continue
                 else:
@@ -583,21 +620,25 @@ class md:
                     #stppp
         
                 #reset qs and ps to zero
-                self.ResetSavepq()
+                self.ResetSavepq(self.savepq)
         
             #loop over md steps
             ipie1=ipie+1
             iss=ipie1+N.array(range(self.npie-ipie1))
             for i in iss:
                 for jj in range(self.nmd/self.npie):
-                    self.vv()
+                    self.vv(j)
                 self.dump(i,j)
 
             #power spectrum
             power=N.copy(self.power)
-            self.GetPower()
+            power2=N.copy(self.power2)
+            if self.savepq:
+                self.GetPower()
             power=(power*j+self.power)/float(j+1)
+            power2=(power2*j+self.power2)/float(j+1)
             self.power=N.copy(power)
+            self.power2=N.copy(power2)
 
             #dump again, to make sure power is all right
             self.dump(i,j)
@@ -612,22 +653,38 @@ class md:
                 fk.write("%i %f    %f \n"%(j,self.T,N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
 
-            #----------------------------------------------------------------
-            #power spectrum
-            #----------------------------------------------------------------
-            f = open("power."+str(self.T)+"."+"run"+str(j)+".dat","w")
-            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            #f.write("#energy    transmission    DoSL    DoSR\n")
-            for i in range(len(self.power)):
-                #only write out power spectrum upto 1.5max(hw)
-                if self.hw is not None:
-                    if(self.power[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+            if self.savepq:
+                #----------------------------------------------------------------
+                #power spectrum
+                #----------------------------------------------------------------
+                f = open("power."+str(self.T)+"."+"run"+str(j)+".dat","w")
+                #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+                #f.write("#energy    transmission    DoSL    DoSR\n")
+                for i in range(len(self.power)):
+                    #only write out power spectrum upto 1.5max(hw)
+                    if self.hw is not None:
+                        if(self.power[i,0] < 1.5*max(self.hw)):
+                            f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                        else:
+                            break
                     else:
-                        break
-                else:
-                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
-            f.close()
+                        f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                f.close()
+
+                #----------------------------------------------------------------
+                #power spectrum from velocity
+                #----------------------------------------------------------------
+                f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat","w")
+                for i in range(len(self.power2)):
+                    #only write out power spectrum upto 1.5max(hw)
+                    if self.hw is not None:
+                        if(self.power2[i,0] < 1.5*max(self.hw)):
+                            f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+                        else:
+                            break
+                    else:
+                        f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+                f.close()
 
     def dump(self,ipie,id):
         """
@@ -637,6 +694,7 @@ class md:
         NCfile = Dataset(outfile,'w','Created '+time.ctime(time.time()))
         NCfile.title = 'Output from md.py'
         NCfile.createDimension('nph',self.nph)
+        #NCfile.createDimension('na',self.na)
         NCfile.createDimension('one',1)
         NCfile.createDimension('two',2)
         NCfile.createDimension('mem',self.ml)
@@ -645,6 +703,8 @@ class md:
         for i in range(len(self.baths)):
             NCfile.createDimension('n'+str(i),self.baths[i].nc)
 
+        #els
+        #Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
 
         #noise series
         for i in range(len(self.baths)):
@@ -661,6 +721,7 @@ class md:
 
         #power spectrum
         Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
+        Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
         #energy
         Write2NetCDFFile(NCfile,self.etot,'energy',('nnmd',),units='')
         #velocity
@@ -735,7 +796,7 @@ def ApplyConstraint(f,constr=None):
         nf=nf-N.dot(f,constr[i])*constr[i]
     return nf
 
-
+'''
 #--------------------------------------------------------------------------------------
 #testing
 #
@@ -820,3 +881,4 @@ if __name__=="__main__":
     PP.show()
     print "testing nonequ - end"
 #--------------------------------------------------------------------------------------
+'''
