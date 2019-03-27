@@ -6,22 +6,22 @@ from matrix import *
 from myio import *
 
 lammpsinfile=[
-"units       metal ",
-"dimension   3 ",
-"boundary    p p p ",
-"atom_style  full",
-"read_data   test.dat ",
-"pair_style  rebo ",
-"pair_coeff  * * /opt/lammps/potentials/CH.airebo C"
+"units         metal",
+"atom_style    full",
+"dimension     3",
+"boundary      p  p  p ",
+"read_data  test.data",
+"pair_style   rebo",
+"pair_coeff * * /opt/lammps/potentials/CH.airebo C H ",
 ]
 #-------------------------------------------------------------------------------------
 #temperature
-T = 4.2
-nrep = 1
+T = 300
+nrep = 2
 #time = 0.658fs #time unit
-dt = 0.5
+dt = 0.25/0.658
 #number of md steps
-nmd = 1000
+nmd = 10**2
 #transiesta run dir,
 #where to find default settings, and relaxed structure *.XV
 #SDir="../CGrun/"
@@ -29,58 +29,51 @@ nmd = 1000
 
 #initialise lammps run
 lmp = lammpsdriver(infile=lammpsinfile)
-lmp.f0 = lmp.f0*0.0
-print(lmp.els)
-#forces...
-#q is 1d array made from 
-#the displacement from equilibrium in unit of 0.06466 Ang., 
-#which is the internal unit of md
-q = N.zeros(len(lmp.xyz))
-print(q)
-lmp.force(q)
-#-------------------------------------------------------------------------------------
+print "initialise md"
 
-#--------------------------------------------------------------------------------------
-print("initialise md")
-
-#we fix the 1st atom
-#constraint is a list of vectors.
-#the force on along each vector is zerofied in md run
 constraint = []
-for i in range(3*2):
+
+fixatoms = range(0*3, (71+1)*3)
+fixatoms.extend(range(697*3, (768+1)*3))
+
+for i in fixatoms:
     tmp = N.zeros(len(lmp.xyz))
-    tmp[i]=1.0
+    tmp[i] = 1.0
     constraint.append(tmp)
-print("constraint:",constraint)
 
+# Molecular Junction atom indices
+slist = range(342, 426+1)
+# atom indices that are connecting to debyge bath
+ecatsl = range(72, 341+1)
+ecatsr = range(427, 696+1)
 
-#if slist is not given, md will initialize it using xyz
-mdrun = md(dt,nmd,T,syslist=None,axyz=lmp.axyz,savepq=False,nrep=nrep,npie=1)
-#attache lammps driver to md
+dynamicatoms = slist+ecatsl+ecatsr
+dynamicatoms.sort()
+print "the following atoms are dynamic:\n"
+print dynamicatoms
+print len(dynamicatoms)
+
+# if slist is not given, md will initialize it using xyz
+mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz,writepq=False,
+           nrep=nrep, npie=1, constr=constraint,nstep=10**5)
+# attache lammps driver to md
 mdrun.AddLMPint(lmp)
-#--------------------------------------------------------------------------------------
 
-#--------------------------------------------------------------------------------------
-#debye bath
-#number of dynamical atoms
-gamma = 10**-5
-nd = len(lmp.xyz)
-eta = gamma*N.identity(nd,N.float)
-print("eta:",eta)
-#--------------------------------------------------------------------------------------
+gamma = 0.0001*2
+#gamma = 1.316423628402082*10**-2
+ndl = len(ecatsl)
+ndr = len(ecatsr)
+etal = gamma*N.identity(3*ndl, N.float)
+etar = gamma*N.identity(3*ndr, N.float)
 
-#-----------------------------------------------------------------------
-#atom indices that are connecting to debyge bath
-ecats=range(nd/3)
-eb = ebath(ecats,T,mdrun.dt,mdrun.nmd,wmax=1.,nw=500,bias=0.0,efric=eta)
-#mdrun.AddBath(eb)
-#----------------------------------------------------------------------
+ebl = ebath(ecatsl, T*1.1, mdrun.dt, mdrun.nmd,
+            wmax=1., nw=500, bias=0.0, efric=etal,zpmotion=False)
+mdrun.AddBath(ebl)
 
-#---------------------------------------------------------------------------------
-#MD
-#------------------------------------------------------------------------------
+ebr = ebath(ecatsr, T*0.9, mdrun.dt, mdrun.nmd,
+            wmax=1., nw=500, bias=0.0, efric=etar,zpmotion=False)
+mdrun.AddBath(ebr)
+
 mdrun.Run()
-#------------------------------------------------------------------------------
-#close lammps instant
+
 lmp.quit()
-#------------------------------------------------------------------------------

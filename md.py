@@ -54,11 +54,11 @@ class md:
         fbaths      Force from all the baths at time t
         etot        total energy at each time step
         nstep       Output atomic position after nstep MD 
-
+        writepq     Whether to savepq to .nc file when calculating the power spectrum
 
     """
     def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
-                 dyn=None,savepq=True,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
+                 dyn=None,savepq=True,writepq=True,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
         #drivers
         self.sint = None #siesta instance
         self.brennerrun=None
@@ -72,7 +72,7 @@ class md:
         self.npie=npie
         self.power = N.zeros((self.nmd,2))
         self.power2 = N.zeros((self.nmd,2))
-
+        self.writepq = writepq
 
         #var: xyz,nta,els
         self.SetXyz(axyz)
@@ -584,7 +584,7 @@ class md:
                     self.phis = ReadNetCDFVar(fn,'phis')
                     self.power =ReadNetCDFVar(fn,'power')
                     self.power2 =ReadNetCDFVar(fn,'power2')
-                    if self.savepq:
+                    if self.writepq:
                         self.qs = ReadNetCDFVar(fn,'qs')
                         self.ps = ReadNetCDFVar(fn,'ps')
                     for i in range(len(self.baths)):
@@ -620,7 +620,7 @@ class md:
                     #stppp
         
                 #reset qs and ps to zero
-                self.ResetSavepq(self.savepq)
+                self.ResetSavepq()
         
             #loop over md steps
             ipie1=ipie+1
@@ -633,8 +633,7 @@ class md:
             #power spectrum
             power=N.copy(self.power)
             power2=N.copy(self.power2)
-            if self.savepq:
-                self.GetPower()
+            self.GetPower()
             power=(power*j+self.power)/float(j+1)
             power2=(power2*j+self.power2)/float(j+1)
             self.power=N.copy(power)
@@ -653,38 +652,36 @@ class md:
                 fk.write("%i %f    %f \n"%(j,self.T,N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
 
-            if self.savepq:
-                #----------------------------------------------------------------
-                #power spectrum
-                #----------------------------------------------------------------
-                f = open("power."+str(self.T)+"."+"run"+str(j)+".dat","w")
-                #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-                #f.write("#energy    transmission    DoSL    DoSR\n")
-                for i in range(len(self.power)):
-                    #only write out power spectrum upto 1.5max(hw)
-                    if self.hw is not None:
-                        if(self.power[i,0] < 1.5*max(self.hw)):
-                            f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
-                        else:
-                            break
-                    else:
+            #----------------------------------------------------------------
+            #power spectrum
+            #----------------------------------------------------------------
+            f = open("power."+str(self.T)+"."+"run"+str(j)+".dat","w")
+            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+            #f.write("#energy    transmission    DoSL    DoSR\n")
+            for i in range(len(self.power)):
+                #only write out power spectrum upto 1.5max(hw)
+                if self.hw is not None:
+                    if(self.power[i,0] < 1.5*max(self.hw)):
                         f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
-                f.close()
-
-                #----------------------------------------------------------------
-                #power spectrum from velocity
-                #----------------------------------------------------------------
-                f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat","w")
-                for i in range(len(self.power2)):
-                    #only write out power spectrum upto 1.5max(hw)
-                    if self.hw is not None:
-                        if(self.power2[i,0] < 1.5*max(self.hw)):
-                            f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
-                        else:
-                            break
                     else:
+                        break
+                else:
+                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+            f.close()
+            #----------------------------------------------------------------
+            #power spectrum from velocity
+            #----------------------------------------------------------------
+            f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat","w")
+            for i in range(len(self.power2)):
+                #only write out power spectrum upto 1.5max(hw)
+                if self.hw is not None:
+                    if(self.power2[i,0] < 1.5*max(self.hw)):
                         f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
-                f.close()
+                    else:
+                        break
+                else:
+                    f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+            f.close()
 
     def dump(self,ipie,id):
         """
@@ -715,7 +712,7 @@ class md:
 
 
         #save all the histories of p,q or not
-        if self.savepq:
+        if self.writepq:
             Write2NetCDFFile(NCfile,self.ps,'ps',('nnmd','nph',),units='')
             Write2NetCDFFile(NCfile,self.qs,'qs',('nnmd','nph',),units='')
 
