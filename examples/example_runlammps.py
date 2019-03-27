@@ -6,12 +6,12 @@ from matrix import *
 from myio import *
 
 lammpsinfile=[
-"units         metal",
-"atom_style    full",
-"dimension     3",
-"boundary      p  p  p ",
-"read_data  test.data",
-"pair_style   rebo",
+"units  metal",
+"atom_style full",
+"dimension  3",
+"boundary   p  p  p ",
+"read_data  test.dat",
+"pair_style rebo",
 "pair_coeff * * /opt/lammps/potentials/CH.airebo C H ",
 ]
 #-------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ print len(dynamicatoms)
 
 # if slist is not given, md will initialize it using xyz
 mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz,writepq=False,
-           nrep=nrep, npie=1, constr=constraint,nstep=10**5)
+           nrep=nrep, npie=1, constr=constraint,nstep=10)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
 
