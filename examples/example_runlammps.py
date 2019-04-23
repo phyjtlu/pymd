@@ -54,6 +54,7 @@ print ("constraint:",constraint)
 mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz,writepq=True,nrep=nrep, npie=1)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
+#--------------------------------------------------------------------------------------
 
 gamma = 10**-5
 nd=len(lmp.xyz)
