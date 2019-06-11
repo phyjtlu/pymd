@@ -35,13 +35,15 @@ class lammpsdriver(lammps):
         self.label = label
         self.lunit = lunit
         self.eunit = eunit
+        if self.eunit =="eV": self.para=1.0
+        if self.eunit =="Kcal/mole": self.para=0.043
         #start lammps
         self.start()
 
     def start(self, np=1):
         print("lammps launched")
-        #todo:better to set the unit to metals here again
-        self.command("units metal")
+        ##todo:better to set the unit to metals here again
+        #self.command("units metal")
 
         #lines = open(self.infile, 'r').readlines()
         #for line in lines: self.command(line)
@@ -78,7 +80,7 @@ class lammpsdriver(lammps):
     def absforce(self, q):
         self.scatter_atoms("x", 1, 3, self.newx(q))
         self.command("run 1")
-        return self.conv*N.array(self.gather_atoms("f", 1, 3))
+        return self.para*self.conv*N.array(self.gather_atoms("f", 1, 3))
         
     def initforce(self):
         print("Calculate zero displacement force")

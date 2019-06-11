@@ -37,7 +37,7 @@ lmp.f0 = lmp.f0*0.0
 #the displacement from equilibrium in unit of lmp.conv * 0.06466 Ang., 
 #which is the internal unit of md
 q=N.zeros(len(lmp.xyz))
-print q
+#print q
 lmp.force(q)
 print "initialise md"
 #we fix the 1st atom
@@ -66,7 +66,7 @@ print("eta:",eta)
 #atom indices that are connecting to debyge bath
 ecats=range(nd/3)
 eb = ebath(ecats,T,mdrun.dt,mdrun.nmd,wmax=1.,nw=500,bias=0.0,efric=eta)
-#mdrun.AddBath(eb)
+mdrun.AddBath(eb)
 #----------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
