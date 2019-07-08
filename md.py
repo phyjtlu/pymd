@@ -371,24 +371,7 @@ class md:
         qtt=ApplyConstraint(qtt,self.constraint)
 
         t=t+1
-        self.t,self.p,self.q = t,ptt2,qtt
-#-------------------------------------------------------------------------------------
-#Add tracking of atomic trajectories by Li Gen.
-        if self.t == 1 or self.t % self.nstep == 0:
-            with open('trajectories'+"."+str(self.T)+"."+"run"+str(id)+'.ani', 'a') as fileobject:
-            #with open('OptimizationMJ'+str(self.t)+'.ang', 'w') as fileobject:
-                fileobject.write(str(len(self.els)))
-                fileobject.write('\n')
-                fileobject.write('Timestep'+'   '+str(self.t))
-                fileobject.write('\n')
-                for ip in range(len(self.els)):
-                    fileobject.write(str(self.els[ip])+'    ')
-                    fileobject.write(str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   ')
-                    fileobject.write(str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   ')
-                    fileobject.write(str(self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   ')
-                    fileobject.write('\n')
-                fileobject.write('\n')
-#-------------------------------------------------------------------------------------
+        self.t,self.p,self.q,self.f = t,ptt2,qtt,f
 
     def force(self,t,p,q,id=0):
         """
@@ -625,11 +608,17 @@ class md:
             #loop over md steps
             ipie1=ipie+1
             iss=ipie1+N.array(range(self.npie-ipie1))
+            trajfile=open('trajectories'+"."+str(self.T)+"."+"run"+str(j)+'.ani', 'w')
             for i in iss:
                 for jj in range(self.nmd/self.npie):
                     self.vv(j)
+                    if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
+                        #trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
+                        trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.etot[(self.t-1)%self.nmd])+'\n')
+                        for ip in range(len(self.els)):
+                            trajfile.write(str(self.els[ip])+'    '+str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   '+str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   '+str(self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
                 self.dump(i,j)
-
+            trajfile.close()
             #power spectrum
             power=N.copy(self.power)
             power2=N.copy(self.power2)

@@ -88,5 +88,7 @@ class lammpsdriver(lammps):
         self.f0 = self.absforce(extq)
 
     def force(self, q):
-        f = self.absforce(q) - self.f0
-        return f
+        return self.absforce(q) - self.f0
+
+    def energy(self,eargs="pe"):#energy,eargs:"pe","ke" or "etotl".
+        return self.get_thermo(eargs)
