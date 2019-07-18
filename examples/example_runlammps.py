@@ -44,7 +44,8 @@ print "initialise md"
 #constraint is a list of vectors.
 #the force on along each vector is zerofied in md run
 constraint = []
-for i in range(3*2):
+fixatoms=range(0*3, (-1+1)*3)
+for i in fixatoms:
     tmp = N.zeros(len(lmp.xyz))
     tmp[i]=1.0
     constraint.append(tmp)

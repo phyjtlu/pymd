@@ -612,7 +612,7 @@ class md:
             trajfile=open('trajectories'+"."+str(self.T)+"."+"run"+str(j)+'.ani', 'w')
             for i in iss:
                 print("Progress of MD")
-                for jj in tqdm(range(self.nmd/self.npie)):
+                for jj in tqdm(range(self.nmd/self.npie),unit="steps"):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         #trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')

@@ -41,7 +41,7 @@ class lammpsdriver(lammps):
         self.start()
 
     def start(self, np=1):
-        print("lammps launched")
+        print("LAMMPS launched")
         ##todo:better to set the unit to metals here again
         #self.command("units metal")
 
@@ -70,7 +70,7 @@ class lammpsdriver(lammps):
 
     def quit(self):
         self.close()
-        print("Quit lammps!")
+        print("Mission completed.")
 
     def newx(self, q):
         for i in range(3*self.number):
@@ -90,5 +90,5 @@ class lammpsdriver(lammps):
     def force(self, q):
         return self.absforce(q) - self.f0
 
-    def energy(self,eargs="pe"):#energy,eargs:"pe","ke" or "etotl".
+    def energy(self,eargs="pe"):#energy,eargs:"pe","ke" or "etotal".
         return self.get_thermo(eargs)

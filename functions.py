@@ -4,6 +4,8 @@ import sys
 import numpy as N
 import units as U
 
+N.seterr(over="ignore")
+
 def coth(x):
     """
     hyperbolic cotangent function
