@@ -6,6 +6,7 @@ import numpy as N
 from numpy import linalg as LA
 #import Scientific.IO.NetCDF as nc
 from netCDF4 import Dataset
+from tqdm import tqdm
 
 import units as U
 from matrix import *
@@ -165,8 +166,8 @@ class md:
         else:
             print "md.ResetSavepq: nmd or nph is not set!"
 
-    def energy(self):
-        return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
+    #def energy(self):
+    #    return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
     def energy(self):
         """
         kinetic energy
@@ -398,64 +399,64 @@ class md:
         
         return pf
 
-    def potforce(self,q):
-        """
-        potential force
-        """
-        if sameq(q,self.q0):
-            return self.f0
-        else:
-            #use dynamical matrix
-            if self.sint is None:
-                f=-mdot(self.dyn,q)
-            #use siesta force 
-            else:
-                slist=self.syslist
-                if len(q)/3 != len(slist):
-                    print "md:potforce: length error!"
-                    sys.exit()
-                extq = N.zeros(len(self.xyz))
-                for i in range(len(slist)):
-                    extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
-                fa = self.sint.force(extq)
-                f = N.zeros(len(q))
-                for i in range(len(f)/3):
-                    f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-            #save 
-            self.q0=q
-            self.f0=f
-            return f
-
-    def potforce(self,q):
-        """
-        Tue's version including brenner
-        """
-        if sameq(q,self.q0):
-            return self.f0
-        else:
-            #use dynamical matrix
-            if self.sint is None:
-                if self.brennerrun is None:
-                    f=-mdot(self.dyn,q)
-                else:
-                    f=self.brennerrun.force(q)
-            #use siesta force 
-            else:
-                slist=self.syslist
-                if len(q)/3 != len(slist):
-                    print "md:potforce: length error!"
-                    sys.exit()
-                extq = N.zeros(len(self.xyz))
-                for i in range(len(slist)):
-                    extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
-                fa = self.sint.force(extq)
-                f = N.zeros(len(q))
-                for i in range(len(f)/3):
-                    f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-            #save 
-            self.q0=q
-            self.f0=f
-            return f
+    #def potforce(self,q):
+    #    """
+    #    potential force
+    #    """
+    #    if sameq(q,self.q0):
+    #        return self.f0
+    #    else:
+    #        #use dynamical matrix
+    #        if self.sint is None:
+    #            f=-mdot(self.dyn,q)
+    #        #use siesta force 
+    #        else:
+    #            slist=self.syslist
+    #            if len(q)/3 != len(slist):
+    #                print "md:potforce: length error!"
+    #                sys.exit()
+    #            extq = N.zeros(len(self.xyz))
+    #            for i in range(len(slist)):
+    #                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
+    #            fa = self.sint.force(extq)
+    #            f = N.zeros(len(q))
+    #            for i in range(len(f)/3):
+    #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
+    #        #save 
+    #        self.q0=q
+    #        self.f0=f
+    #        return f
+#
+    #def potforce(self,q):
+    #    """
+    #    Tue's version including brenner
+    #    """
+    #    if sameq(q,self.q0):
+    #        return self.f0
+    #    else:
+    #        #use dynamical matrix
+    #        if self.sint is None:
+    #            if self.brennerrun is None:
+    #                f=-mdot(self.dyn,q)
+    #            else:
+    #                f=self.brennerrun.force(q)
+    #        #use siesta force 
+    #        else:
+    #            slist=self.syslist
+    #            if len(q)/3 != len(slist):
+    #                print "md:potforce: length error!"
+    #                sys.exit()
+    #            extq = N.zeros(len(self.xyz))
+    #            for i in range(len(slist)):
+    #                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
+    #            fa = self.sint.force(extq)
+    #            f = N.zeros(len(q))
+    #            for i in range(len(f)/3):
+    #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
+    #        #save 
+    #        self.q0=q
+    #        self.f0=f
+    #        return f
 
     def potforce(self,q):
         """
@@ -610,7 +611,8 @@ class md:
             iss=ipie1+N.array(range(self.npie-ipie1))
             trajfile=open('trajectories'+"."+str(self.T)+"."+"run"+str(j)+'.ani', 'w')
             for i in iss:
-                for jj in range(self.nmd/self.npie):
+                print("Progress of MD")
+                for jj in tqdm(range(self.nmd/self.npie)):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         #trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
