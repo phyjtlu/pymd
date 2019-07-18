@@ -202,16 +202,16 @@ class phbath:
         return mf(f,self.cids,len(phis[0]))
 
 
-
-#--------------------------------------------------------------------------------------
-def mf(f,cats,lens):
-    """
-    padding f to dimension len
-    """
-    t = N.zeros(lens)
-    for i in range(len(cats)):
-        t[cats[i]]=f[i]
-    return t
+#
+##--------------------------------------------------------------------------------------
+#def mf(f,cats,lens):
+#    """
+#    padding f to dimension len
+#    """
+#    t = N.zeros(lens)
+#    for i in range(len(cats)):
+#        t[cats[i]]=f[i]
+#    return t
 
 
 def exlist(a,indices):

@@ -165,6 +165,6 @@ if __name__=="__main__":
         if eph.wl[i]<=max(ecut,phcut):
             f.write("%f  %f  %f\n"%(eph.wl[i],DOS[i],DD[i]))
         else:
-            beak
+            break
     f.close()
 

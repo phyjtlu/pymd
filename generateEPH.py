@@ -5,7 +5,7 @@ import Scientific.IO.NetCDF as nc
 import numpy as N
 import numpy.linalg as LA
 
-from Inelastica import SiestaIO as SIO
+#from Inelastica import SiestaIO as SIO
 from md import *
 from phbath import *
 from ebath import *
@@ -79,7 +79,7 @@ olddynxyz=N.array([mathmd.xyz[i-1][0] for i in mathmd.dynatom])
 print olddynxyz
 
 #--------------------------------------------------------------------------------------
-import Inelastica.SiestaIO as SIO
+#import Inelastica.SiestaIO as SIO
 #read in the relaxed structure
 #cell   3x3 unit vectors
 #snr    species numbers defined in fdf
@@ -134,7 +134,7 @@ if dmax > 0.2:
     print "----------------------------"
     print 
     print "----------------------------"
-    stopppp
+    #stopppp
         
 
 

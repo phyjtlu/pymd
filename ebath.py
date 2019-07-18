@@ -194,7 +194,7 @@ class ebath:
                         -mm(self.bias*self.zeta2,exlist(phis[0],self.cids))
             else:
                 print "WARNING: nonlocal electronic force not implemented!"
-                stophere
+                #stophere
                 f=f-mm(self.kernel[i],exlist(phis[i],self.cids))*self.dt
         return mf(f,self.cids,len(phis[0]))
 
@@ -202,14 +202,14 @@ class ebath:
 #--------------------------------------------------------------------------------------
 #driver
 #--------------------------------------------------------------------------------------
-def mf(f,cats,lens):
-    """
-    padding f to dimension len
-    """
-    t = N.zeros(lens)
-    for i in range(len(cats)):
-        t[cats[i]]=f[i]
-    return t
+#def mf(f,cats,lens):
+#    """
+#    padding f to dimension len
+#    """
+#    t = N.zeros(lens)
+#    for i in range(len(cats)):
+#        t[cats[i]]=f[i]
+#    return t
 
 
 def exlist(a,indices):
@@ -261,9 +261,9 @@ if __name__=="__main__":
     #    def __init__(self,cats,T=0.,wmax=None,nw=None,bias=0.,efric=None,exim=None,exip=None,dt=None,nmd=None):
     #----------------------------------------------------
     ecats=range(13)
-    eb = ebath(ecats,T=300.0,wmax=1.0,nw=500,bias=1.,efric=eph.efric,exim=eph.xim,exip=eph.xip)
+    eb = ebath(ecats,T=300.0,dt=0.05,nmd=10**4,wmax=1.0,nw=500,bias=1.,efric=eph.efric,exim=eph.xim,exip=eph.xip)
     eb.SetMDsteps(8,2**12)
-    eb.genoi()
+    eb.gnoi()
     PP.plot(eb.noise[:,0])
     PP.savefig("enoise.pdf")
     PP.close()

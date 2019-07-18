@@ -5,7 +5,7 @@ import Scientific.IO.NetCDF as nc
 import numpy as N
 import numpy.linalg as LA
 
-from Inelastica import SiestaIO as SIO
+#from Inelastica import SiestaIO as SIO
 from md import *
 from phbath import *
 from ebath import *
@@ -20,7 +20,7 @@ from myfft import *
 from optparse import OptionParser, OptionGroup
 
 from brenner import *
-import py_brenner_module
+#import py_brenner_module
 
 
 #--------------------------------------------------------------------------------------

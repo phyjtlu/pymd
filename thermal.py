@@ -59,7 +59,7 @@ hwcut=0.03
 #--------------------------------------------------------------------------------------
 #    def __init__(self,dt=None,nmd=None,syslist=None,xyz=None,harmonic=False,dyn=None,T=None,savepq=True):
 print "initialise md"
-test = md()
+test = md(dt,nmd,T)
 print md.__doc__
 
 test.setDyn(eph.DynMat)
@@ -164,7 +164,7 @@ for j in range(nrep):
     test.ResetSavepq()
 
     for i in range(test.nmd):
-        test.vv()
+        test.vv(j)
     test.GetPower()
     power=power+test.power
     

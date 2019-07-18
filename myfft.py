@@ -61,17 +61,17 @@ if __name__ == "__main__":
 
     al = N.array([a,a2])
     
-    mf = myfft(0.1,len(a))
+    mfft = myfft(0.1,len(a))
     
-    bl = map(mf.Fourier1D,al)
+    bl = map(mfft.Fourier1D,al)
 
-    bll = N.transpose(map(mf.iFourier1D,bl))
+    bll = N.transpose(map(mfft.iFourier1D,bl))
 
     print bll.shape
 
     print (bll.T-al).max()
 
     a=N.arange(10)
-    mf = myfft(0.1,len(a))
-    print N.abs(N.array(mf.iFourier1D(mf.Fourier1D(a))-a)).max()
+    mfft = myfft(0.1,len(a))
+    print N.abs(N.array(mfft.iFourier1D(mfft.Fourier1D(a))-a)).max()
     

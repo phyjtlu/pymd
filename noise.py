@@ -8,8 +8,17 @@ import units as U
 from matrix import *
 from functions import *
 from myfft import *
+from tqdm import tqdm
 
-
+#--------------------------------------------------------------------------------------
+def mf(f,cats,lens):
+    """
+    padding f to dimension len
+    """
+    t = N.zeros(lens)
+    for i in range(len(cats)):
+        t[cats[i]]=f[i]
+    return t
 #--------------------------------------------------------------------------------------
 
 #phonon noise in w space
@@ -58,7 +67,8 @@ def phnoise(gamma,wl,T,phcut,dt,nmd,classical=False,zpmotion=True):
 
     #positive frequency
     phnoi1 = []
-    for i in range(hlen+1):
+    print ("Progress of phonon noise generator")
+    for i in tqdm(range(hlen+1)):
         w = dw*i
         #flinterp: linear interpolation of gamma
         #equ(w) = 2.0*(bose(w,T)+0.5)
@@ -109,7 +119,7 @@ def enoisew(wl,efric,exim,exip,bias,T,ecut,classical=False,zpmotion=True):
 
     if nc != nm or nc!=np: 
         print "enoisew: efric shape error!"
-        stoppp
+        #stoppp
 
     enoi1=N.zeros((nw,nc,nc),N.complex)
     for i in range(nw):
@@ -153,7 +163,8 @@ def enoise(efric,exim,exip,bias,T,ecut,dt,nmd,classical=False,zpmotion=True):
     delta = dt*nmd #Dirac delta delta
 
     enoi1 = []
-    for i in range(hlen+1):
+    print ("Progress of electron noise generator")
+    for i in tqdm(range(hlen+1)):
         w = dw*i
         #equilibrium part
         aw = delta*equ(w,ecut,T,classical,zpmotion)
