@@ -67,7 +67,7 @@ def phnoise(gamma,wl,T,phcut,dt,nmd,classical=False,zpmotion=True):
 
     #positive frequency
     phnoi1 = []
-    print ("Progress of phonon noise generator")
+    print ("Progress of phonon noise generate")
     for i in tqdm(range(hlen+1),unit="steps"):
         w = dw*i
         #flinterp: linear interpolation of gamma
@@ -163,7 +163,7 @@ def enoise(efric,exim,exip,bias,T,ecut,dt,nmd,classical=False,zpmotion=True):
     delta = dt*nmd #Dirac delta delta
 
     enoi1 = []
-    print ("Progress of electron noise generator")
+    print ("Progress of electron noise generate")
     for i in tqdm(range(hlen+1),unit="steps"):
         w = dw*i
         #equilibrium part
