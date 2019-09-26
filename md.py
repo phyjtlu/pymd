@@ -273,7 +273,7 @@ class md:
         """
         self.t = 0
         if self.dyn is None:
-            print "md.initial: no dynamical matrix!!"
+            print "md.initial: no dynamical matrix!"
             #sys.exit()
             print "p,q set to 0"
             self.p=N.zeros(self.nph)
@@ -325,7 +325,7 @@ class md:
             print "md.GetPower: trajectories not saved!"
             print "md.GetPower: you need to set savepq to True!"
             sys.exit()
-        print "md.GetPower: generate power spectrum from trajectories!"
+        print "md.GetPower: generate power spectrum from trajectories."
         self.power = powerspec(self.qs,self.dt,self.nmd)
         self.power2 = powerspec2(self.ps,self.dt,self.nmd)
 
@@ -774,7 +774,7 @@ def ApplyConstraint(f,constr=None):
     constr=N.array(constr)
     n,d=N.shape(constr)
     if d!=dd:
-        print "ApplyConstraint:shape error"
+        print "ApplyConstraint:shape error!"
 
     nf=1.0*f
     for i in range(n):

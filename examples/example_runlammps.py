@@ -4,6 +4,7 @@ from ebath import *
 from lammpsdriver import *
 from matrix import *
 from myio import *
+from postprocessing import *
 
 lammpsinfile=[
 "units metal ",
@@ -17,6 +18,7 @@ lammpsinfile=[
 #-------------------------------------------------------------------------------------
 #temperature
 T = 300
+delta=0.1
 nrep = 2
 #time = 0.658fs #time unit
 dt = 0.25/0.658
@@ -79,11 +81,11 @@ etar = gamma*N.identity(3*ndr, N.float)
 
 #-----------------------------------------------------------------------
 #atom indices that are connecting to bath
-ebl = ebath(ecatsl, T*1.1, mdrun.dt, mdrun.nmd,
+ebl = ebath(ecatsl, T*(1+delta), mdrun.dt, mdrun.nmd,
             wmax=1., nw=500, bias=0.0, efric=etal,zpmotion=False)
 mdrun.AddBath(ebl)
 
-ebr = ebath(ecatsr, T*0.9, mdrun.dt, mdrun.nmd,
+ebr = ebath(ecatsr, T*(1-delta), mdrun.dt, mdrun.nmd,
             wmax=1., nw=500, bias=0.0, efric=etar,zpmotion=False)
 mdrun.AddBath(ebr)
 #----------------------------------------------------------------------
@@ -95,4 +97,5 @@ mdrun.Run()
 #------------------------------------------------------------------------------
 #close lammps instant
 lmp.quit()
+CTC(delta=delta)
 #----------------
