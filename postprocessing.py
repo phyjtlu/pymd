@@ -3,9 +3,10 @@ import numpy as np
 #from matplotlib import pyplot as plt
 
 #calculate thermal conductance
-def CTC(delta=0.1):
+def CTC(delta,temp):
     print("Calculate thermal conductance.")
     delta=delta
+    temperture=temp
     times=len(glob.glob('./kappa.*.bath*.run*.dat'))/2
     kb=np.empty([2,times])
 
@@ -16,7 +17,7 @@ def CTC(delta=0.1):
                 with open(files, 'r') as f: 
                     for line in f: 
                         kb[i][j]=line.split()[2]
-                        temperture=float(line.split()[1])
+#                        temperture=float(line.split()[1])
 
     kappa=(kb[0]-kb[1])/2/(2*delta*temperture)
 
