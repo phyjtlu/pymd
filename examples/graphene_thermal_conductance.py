@@ -7,6 +7,7 @@ from myio import *
 from postprocessing import *
 
 lammpsinfile = [
+    "log none",
     "units metal ",
     "dimension 3 ",
     "boundary p p p",
@@ -44,16 +45,9 @@ q = N.zeros(len(lmp.xyz))
 lmp.force(q)
 
 print("initialise md")
-
-constraint = []
-
 fixatoms = list(range(0*3, (7+1)*3))
 fixatoms.extend(list(range(88*3, (95+1)*3)))
 
-for i in fixatoms:
-    tmp = N.zeros(len(lmp.xyz))
-    tmp[i] = 1.0
-    constraint.append(tmp)
 # print(("constraint:",constraint))
 # Molecular Junction atom indices
 slist = list(range(24, 71+1))
@@ -69,16 +63,16 @@ print(len(dynamicatoms))
 
 # if slist is not given, md will initialize it using xyz
 mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True,
-           nrep=nrep, npie=1, constr=constraint, nstep=100)
+           nrep=nrep, npie=1, constr=fixatoms, nstep=100)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
 # --------------------------------------------------------------------------------------
-
-gamma = 10**-4
+# unit in 0.658211814201041 fs
+damp = 100/0.658211814201041
 ndl = len(ecatsl)
 ndr = len(ecatsr)
-etal = gamma*N.identity(3*ndl, N.float)
-etar = gamma*N.identity(3*ndr, N.float)
+etal = (1.0/damp)*N.identity(3*ndl, N.float)
+etar = (1.0/damp)*N.identity(3*ndr, N.float)
 # --------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------

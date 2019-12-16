@@ -352,7 +352,7 @@ class md:
         f = self.force(t,p,q,0)
         pthalf = p + f*self.dt/2.0
         qtt = q + p*self.dt + f*self.dt**2/2.0
-        
+
         #evaluate current 
         for i in range(len(self.baths)):
             #self.baths[i].cur=N.append(self.baths[i].cur,mm(self.fbaths[i],p))
@@ -366,7 +366,6 @@ class md:
         f=self.force(t,ptt1,qtt,1)
         ptt2=pthalf+self.dt*f/2.0
 
-        
         #constraint
         ptt2=ApplyConstraint(ptt2,self.constraint)
         qtt=ApplyConstraint(qtt,self.constraint)
@@ -766,22 +765,9 @@ def ApplyConstraint(f,constr=None):
     constr is an array of vectors
     This subroutine zerofy the force along each vector
     """
-    if constr is None:
-        return f
-    #check dimensions
-    f=N.array(f)
-    dd=len(f)
+    nf=N.array(f)*1.0
     constr=N.array(constr)
-    n,d=N.shape(constr)
-    if d!=dd:
-        print "ApplyConstraint:shape error!"
-
-    nf=1.0*f
-    for i in range(n):
-        nn=LA.norm(constr[i])
-        if nn != 0:
-            constr[i]=constr[i]/nn
-        nf=nf-N.dot(f,constr[i])*constr[i]
+    nf[constr]=0
     return nf
 
 '''

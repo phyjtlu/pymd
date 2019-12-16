@@ -51,7 +51,6 @@ class lammpsdriver(lammps):
 
         #lines = open(self.infile, 'r').readlines()
         #for line in lines: self.command(line)
-        self.command("log none")
         self.commands_list(self.infile)
         self.type = N.array(self.gather_atoms("type", 0, 1))
         #self.mass = N.array(self.gather_atoms("mass",1,1))
