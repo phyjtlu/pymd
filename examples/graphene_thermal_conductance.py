@@ -7,14 +7,14 @@ from myio import *
 from postprocessing import *
 
 lammpsinfile = [
-    "log none",
+#    "log none",
     "units metal ",
     "dimension 3 ",
     "boundary p p p",
     "atom_style full",
     "read_data graphene.data ",
     "pair_style rebo ",
-    "pair_coeff * * CH.airebo C",
+    "pair_coeff * * CH.rebo C",
     "min_style cg",
     "minimize 1e-25 1e-25 5000 10000",
 ]

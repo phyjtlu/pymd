@@ -119,7 +119,7 @@ if __name__=="__main__":
     nc=chkShape(eph.efric)
     nl=chkShape(eph.SigL[0])
     nr=chkShape(eph.SigR[0])
-    print nl,nr
+    print(nl,nr)
 
     phSig=N.zeros((nw,nc,nc),N.complex)
     phnoise=N.zeros((nw,nc,nc),N.complex)

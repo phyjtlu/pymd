@@ -14,7 +14,7 @@ def powerspec(qs,dt,nmd):
     qst=N.transpose(N.array(qs))
     nph,nmd2 = qst.shape
     if nmd != nmd2:
-        print "power: qs shape error!"
+        print("power: qs shape error!")
         sys.exit()
     dw = 2.*N.pi/dt/nmd
 
@@ -34,7 +34,7 @@ def powerspec2(ps,dt,nmd):
     pst=N.transpose(N.array(ps))
     nph,nmd2 = pst.shape
     if nmd != nmd2:
-        print "power: ps shape error!"
+        print("power: ps shape error!")
         sys.exit()
     dw = 2.*N.pi/dt/nmd
 

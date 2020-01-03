@@ -19,7 +19,7 @@ def get_atomname(mass):
     """
     get the element name from its atomic mass by checking the dictionary
     """
-    for key, value in AtomicMassTable.items():
+    for key, value in list(AtomicMassTable.items()):
         if abs(mass-value) < 0.01:
             return key
 

@@ -81,7 +81,7 @@ class md:
         if syslist is not None:
             if(len(syslist) > self.nta or min(syslist) < 0 or \
                max(syslist) > self.nta-1):
-                print "syslist out of range"
+                print("syslist out of range")
                 sys.exit(0)
             else:
                 self.syslist = N.array(syslist,dtype='int')
@@ -92,7 +92,7 @@ class md:
         elif axyz is not None:
             #set using axyz
             #all are system atoms
-            self.syslist = N.array(range(len(axyz)),dtype='int')
+            self.syslist = N.array(list(range(len(axyz))),dtype='int')
             self.na = len(self.syslist)
             self.nph = 3*len(self.syslist)
         else:
@@ -136,24 +136,24 @@ class md:
 
     def get_atommass(self):
         for atomsname in self.els:
-            for key, value in U.AtomicMassTable.items():
+            for key, value in list(U.AtomicMassTable.items()):
                 if atomsname==key:
                     self.mass.append(value)
 #--------------------------------------------------------------
 
     def info(self):
-        print "--------------------------------------------\n"
-        print "Basis information of the MD simulation:\n\n"
-        print "--------------------------------------------\n"
-        print "Harmonic force: "+str(self.harmonic)+"\n"
-        print "System atom number:"+str(self.na)+"\n"
-        print "MD time step:"+str(self.dt)+"\n"
-        print "MD number of steps:"+str(self.nmd)+"\n"
-        print "MD memory kernel length:"+str(self.ml)+"\n"
-        print "Number of baths attached:"+str(len(self.baths))+"\n\n\n"
+        print("--------------------------------------------\n")
+        print("Basis information of the MD simulation:\n\n")
+        print("--------------------------------------------\n")
+        print("Harmonic force: "+str(self.harmonic)+"\n")
+        print("System atom number:"+str(self.na)+"\n")
+        print("MD time step:"+str(self.dt)+"\n")
+        print("MD number of steps:"+str(self.nmd)+"\n")
+        print("MD memory kernel length:"+str(self.ml)+"\n")
+        print("Number of baths attached:"+str(len(self.baths))+"\n\n\n")
 
         if self.dyn is None:
-            print "md.info: No dynamical matrix input!"
+            print("md.info: No dynamical matrix input!")
             #sys.exit()
 
 
@@ -164,7 +164,7 @@ class md:
             self.qs = N.zeros((self.nmd,self.nph))
             #self.power = N.zeros((self.nmd,2))
         else:
-            print "md.ResetSavepq: nmd or nph is not set!"
+            print("md.ResetSavepq: nmd or nph is not set!")
 
     #def energy(self):
     #    return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
@@ -179,10 +179,10 @@ class md:
         Adding a bath
         """
         if self.dt != bath.dt:
-            print "md.AddBath: md time step dt not consistent!"
+            print("md.AddBath: md time step dt not consistent!")
             sys.exit()
         if self.nmd != bath.nmd:
-            print "md.AddBath: number of md steps nmd not consistent!"
+            print("md.AddBath: number of md steps nmd not consistent!")
             sys.exit()
         self.baths.append(bath)
         #make sure we save enought memory for all the baths
@@ -204,7 +204,7 @@ class md:
 
     def SetXyz(self,axyz):
         if axyz is not None:
-            print "md.SetXyz:Seting xyz and nta"
+            print("md.SetXyz:Seting xyz and nta")
             self.xyz = N.array([a[1:] for a in axyz],dtype='d').flatten()
             self.els = [a[0] for a in axyz]
             self.nta = len(axyz)
@@ -214,7 +214,7 @@ class md:
             self.nta = None
 
     def SetSyslist(self,syslist):
-        print "md.SetXyz:Seting syslist"
+        print("md.SetXyz:Seting syslist")
         self.syslist= N.array(syslist)
         #number of system atoms
         self.na = len(syslist)
@@ -222,7 +222,7 @@ class md:
         self.nph = 3*len(syslist)
         if self.xyz is not None:
             if len(self.syslist) > self.nta:
-                print "md.SetSyslist:system atom number larger than total atom number"
+                print("md.SetSyslist:system atom number larger than total atom number")
                 sys.exit()
 
     def setDyn(self,dyn=None):
@@ -230,21 +230,21 @@ class md:
         set up the dynamical matrix of the system
         """
         if dyn is not None:
-            print "md.setDyn: getting dynamical matrix"
+            print("md.setDyn: getting dynamical matrix")
             ndyn = N.array(dyn)
-            print "md.setDyn: checking dynamical matrix"
+            print("md.setDyn: checking dynamical matrix")
             n = chkShape(ndyn)
             if self.nph is not None and self.nph != n:
-                print "md.setDyn: the dimension of dynamical matrix is wrong!"
+                print("md.setDyn: the dimension of dynamical matrix is wrong!")
                 sys.exit(0)
             self.nph = n
-            print "md.setDyn: symmetrizing dynamical matrix"
+            print("md.setDyn: symmetrizing dynamical matrix")
             self.dyn = symmetrize(ndyn)
 
             av,au = LA.eigh(self.dyn)
             if min(av)<0:
-                print "md.setDyn: there are negative frequencies"
-                print "md.setDyn: I will remove them"
+                print("md.setDyn: there are negative frequencies")
+                print("md.setDyn: I will remove them")
                 avn=0.*av
                 for i in range(len(av)):
                     if av[i]<0:
@@ -252,18 +252,18 @@ class md:
                     else:
                         avn[i]=av[i]
                 av=avn
-            self.hw = N.array(map(N.real,map(N.sqrt,av)))
+            self.hw = N.array(list(map(N.real,list(map(N.sqrt,av)))))
             self.U = N.array(au)
             self.dyn=mm(self.U,N.diag(N.array(av)),N.transpose(self.U))
             #if min(av)>=0:
             #    print "the dynmat should not change much"
             #    print "max diff. of dynmatrix:", abs(self.dyn-ndyn).sum()
-            print "md.setDyn: Done"
+            print("md.setDyn: Done")
         else:
             self.dyn = None
             self.hw = None
             self.U = None
-            print "md.setDyn: no dynamical matrix provided!"
+            print("md.setDyn: no dynamical matrix provided!")
             #sys.exit()
             
 
@@ -273,9 +273,9 @@ class md:
         """
         self.t = 0
         if self.dyn is None:
-            print "md.initial: no dynamical matrix!"
+            print("md.initial: no dynamical matrix!")
             #sys.exit()
-            print "p,q set to 0"
+            print("p,q set to 0")
             self.p=N.zeros(self.nph)
             self.q=N.zeros(self.nph)
             self.pinit=N.zeros(self.nph)
@@ -314,7 +314,7 @@ class md:
             self.qhis=N.zeros((self.ml,self.nph))
             self.phis=N.zeros((self.ml,self.nph))
         else:
-            print "self.nph and self.ml are not set!"
+            print("self.nph and self.ml are not set!")
             sys.exit()
 
     def GetPower(self):
@@ -322,10 +322,10 @@ class md:
         calculate the power spectrum from the MD trajectories.
         """
         if not self.savepq:
-            print "md.GetPower: trajectories not saved!"
-            print "md.GetPower: you need to set savepq to True!"
+            print("md.GetPower: trajectories not saved!")
+            print("md.GetPower: you need to set savepq to True!")
             sys.exit()
-        print "md.GetPower: generate power spectrum from trajectories."
+        print("md.GetPower: generate power spectrum from trajectories.")
         self.power = powerspec(self.qs,self.dt,self.nmd)
         self.power2 = powerspec2(self.ps,self.dt,self.nmd)
 
@@ -473,7 +473,7 @@ class md:
             return self.f0
 
         if len(q)/3 != len(self.syslist):
-            print "md:potforce: length error!"
+            print("md:potforce: length error!")
             sys.exit()
         extq = N.zeros(len(self.xyz))
         for i in range(len(self.syslist)):
@@ -493,13 +493,13 @@ class md:
         elif  self.lammpsrun is not None:
             fa=self.lammpsrun.force(extq)
             f = N.zeros(len(q))
-            for i in range(len(f)/3):
+            for i in range(int(len(f)/3)):
                 f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
         #use dynamical matrix 
         elif self.dyn is not None:
             f=-mdot(self.dyn,q)
         else:
-            print "no driver, no md"
+            print("no driver, no md")
             sys.exit()
 
         #save 
@@ -550,16 +550,16 @@ class md:
         
         #loop over independent md runs
         for j in range(self.nrep):   
-            print "MD run: "+str(j)+"\n"
+            print("MD run: "+str(j)+"\n")
             fn="MD"+str(j)+".nc"
             fnm="MD"+str(j-1)+".nc"
 
             if os.path.isfile(fn):
-                print "find file: "+fn+"\n"
+                print("find file: "+fn+"\n")
                 ipie = int(ReadNetCDFVar(fn,'ipie')[0])
                 if(ipie+1 < self.npie):
-                    print "unfinished run"
-                    print "reading resume information"
+                    print("unfinished run")
+                    print("reading resume information")
                     self.p = ReadNetCDFVar(fn,'p')
                     self.q = ReadNetCDFVar(fn,'q')
                     self.t = ReadNetCDFVar(fn,'t')[0]
@@ -574,19 +574,19 @@ class md:
                         self.baths[i].noise=ReadNetCDFVar(fn,'noise'+str(i))
 
                 elif(ipie+1 == self.npie):
-                    print "finished run"
+                    print("finished run")
                     self.power =ReadNetCDFVar(fn,'power')
                     self.power2 =ReadNetCDFVar(fn,'power2')
                     self.t = ReadNetCDFVar(fn,'t')[0]
                     continue
                 else:
-                    print "ipie error"
+                    print("ipie error")
                     sys.exit()
             else:
-                print "new run"
+                print("new run")
                 ipie=-1  #yes,-1
                 if os.path.isfile(fnm):
-                    print "reading history from previous run"
+                    print("reading history from previous run")
                     self.p = ReadNetCDFVar(fnm,'p')
                     self.q = ReadNetCDFVar(fnm,'q')
                     qhis0 = ReadNetCDFVar(fnm,'qhis')
@@ -607,11 +607,11 @@ class md:
         
             #loop over md steps
             ipie1=ipie+1
-            iss=ipie1+N.array(range(self.npie-ipie1))
+            iss=ipie1+N.array(list(range(self.npie-ipie1)))
             trajfile=open('trajectories'+"."+str(self.T)+"."+"run"+str(j)+'.ani', 'w')
             for i in iss:
                 print("Progress of MD")
-                for jj in tqdm(range(self.nmd/self.npie),unit="steps"):
+                for jj in tqdm(list(range(int(self.nmd/self.npie))),unit="steps"):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         #trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
@@ -737,7 +737,7 @@ def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
     if description: tmp.description = description
 
 def ReadNetCDFVar(file,var):
-    print "ReadNetCDFFile: reading "+ var
+    print("ReadNetCDFFile: reading "+ var)
     f = Dataset(file,'r')
     vv=N.array(f.variables[var])
     f.close()

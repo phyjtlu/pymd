@@ -11,7 +11,7 @@ def coth(x):
     hyperbolic cotangent function
     """
     if x == 0.0:
-        print "coth:coth(0) is infinity"
+        print("coth:coth(0) is infinity")
         sys.exit(0)
     else:
         return N.cosh(x)/N.sinh(x)
@@ -93,7 +93,7 @@ def rpadleft(bs,b):
     elif len(bs) == 1:
         return N.array([b])
     else:
-        print "len(bs) is less than 1"
+        print("len(bs) is less than 1")
         sys.exit()
 
 def mm(* args):

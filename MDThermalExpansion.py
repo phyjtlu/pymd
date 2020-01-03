@@ -33,7 +33,7 @@ def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
     if description: tmp.description = description
 
 def ReadNetCDFVar(file,var):
-    print "ReadNetCDFFile: reading "+ var
+    print("ReadNetCDFFile: reading "+ var)
     f = nc.NetCDFFile(file,'r')
     vv=N.array(f.variables[var])
     f.close()
@@ -59,7 +59,7 @@ def ReadEPHNCFile(filename):
         pass
 
     file = nc.NetCDFFile(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     eph.filename = filename
@@ -86,7 +86,7 @@ def ReadMatlabConfigFile(filename):
         pass
 
     file = nc.NetCDFFile(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes[:,0]
     config.filename = filename
@@ -109,7 +109,7 @@ def ReadMatlabPHNCFile(filename):
         pass
 
     file = nc.NetCDFFile(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     eph.filename = filename
@@ -148,7 +148,7 @@ def WriteEPHNCfile(filename,E,nw,NA_L,NA_R,fL,fR,KernelL,KernelR,gammaL,gammaR):
     Write a NetCDF file contains information for harmonic analysis
     """
     fn=nc.NetCDFFile(filename,'w')
-    print 'Writing to %s' %filename
+    print('Writing to %s' %filename)
     
     #fn.createDimension('NPh',len(hw))
     fn.createDimension('NWl',len(E))
@@ -178,7 +178,7 @@ def WriteEPHNCfile(filename,E,nw,NA_L,NA_R,fL,fR,KernelL,KernelR,gammaL,gammaR):
     Write2NetCDFFile(fn,gammaL.real,'gammaL',('Ngl1','Ngl2','Ngl3',),units='eV')
     Write2NetCDFFile(fn,gammaR.real,'gammaR',('Ngr1','Ngr2','Ngr3',),units='eV')
 
-    print 'Finished writing.'
+    print('Finished writing.')
     fn.close()
 
 def setupParameters():
@@ -198,7 +198,7 @@ def setupParameters():
 #-------------------------------Program Starts-----------------------------------------
 #--------------------------------------------------------------------------------------
 setupParameters()
-print general.file2load #SystemInput
+print(general.file2load) #SystemInput
 #--------------------------------------------------------------------------------------
 # Load Input:
 #T=300                     # Temperature (K)
@@ -223,7 +223,7 @@ NR=eph.NA_R*dim
 # Config and dynamical matrix:
 #filename="GrapheneConfig.nc"
 config=ReadMatlabConfigFile(general.file2load)
-print config.typevec.shape,config.R.shape,config.R0.shape,config.D00ev2.shape,eph.SigL.shape,eph.E.shape
+print(config.typevec.shape,config.R.shape,config.R0.shape,config.D00ev2.shape,eph.SigL.shape,eph.E.shape)
 #--------------------------------------------------------------------------------------
 # Noise generation:
 #eph.nmd=200 #200
@@ -242,10 +242,10 @@ eph.dt=eph.dt # 0.5->0.05 fs due to hydrogen!
 #print 'dt',eph.dt
 eph.eta_ad=0.005#.01#0.000000001#
 
-phl = phbath(eph.T+eph.dT/2,range(eph.NA_L),eph.hwcut/2,eph.nw,eph.dt,eph.nmd,ml=eph.nmemL,sig=eph.SigL,gwl=eph.E,eta_ad=eph.eta_ad,classical=False,zpmotion=True)##sig=eph.SigL,gwl=eph.wl)
+phl = phbath(eph.T+eph.dT/2,list(range(eph.NA_L)),eph.hwcut/2,eph.nw,eph.dt,eph.nmd,ml=eph.nmemL,sig=eph.SigL,gwl=eph.E,eta_ad=eph.eta_ad,classical=False,zpmotion=True)##sig=eph.SigL,gwl=eph.wl)
 phl.gmem()
 #phl.gnoi()
-phr = phbath(eph.T-eph.dT/2,range(eph.NA_R)-eph.NA_R,eph.hwcut/2,eph.nw,eph.dt,eph.nmd,ml=eph.nmemR,sig=eph.SigR,gwl=eph.E,eta_ad=eph.eta_ad, classical=False,zpmotion=True)##sig=eph.SigL,gwl=eph.wl)
+phr = phbath(eph.T-eph.dT/2,list(range(eph.NA_R))-eph.NA_R,eph.hwcut/2,eph.nw,eph.dt,eph.nmd,ml=eph.nmemR,sig=eph.SigR,gwl=eph.E,eta_ad=eph.eta_ad, classical=False,zpmotion=True)##sig=eph.SigL,gwl=eph.wl)
 phr.gmem()
 #phr.gnoi()
 #classical=False: to use 2*nu*kB*T or full,zpmotion=False:To include QM +1/2 or neglect.
@@ -285,7 +285,7 @@ else:
    config.R0=np.array(R0)
    config.R=np.array(R)
    config.D00ev2=np.identity(len(typevec2)*3)
-   print config.R.shape,config.R0.shape,anr.shape
+   print(config.R.shape,config.R0.shape,anr.shape)
 
 
    #the new structure without H
@@ -311,7 +311,7 @@ else:
    #config.cell[2]=39.3522
    brennerrun=brenner(xyz=config.R0,anr=anr,cell=config.cell,devicedir=3,constrained=config.Rfix,anr_constrained=config.typefix*6)
    brennerrun.initforce()
-   print 'First Force: ',brennerrun.f0#,brennerrun.f0[0:6]#config.R[0:6]
+   print('First Force: ',brennerrun.f0)#,brennerrun.f0[0:6]#config.R[0:6]
    brennerrun.f0=N.zeros(len(config.R0))
    mdrun = md(dt,nmd,T,harmonic=False,dyn=config.D00ev2,nrep=nrep,npie=1,savepq=True)#savepq=False
    mdrun.brennerrun=brennerrun

@@ -92,7 +92,7 @@ class brenner:
     def initforce(self):
         """
         """
-        print "Calculate zero displacement force..."
+        print("Calculate zero displacement force...")
         #equilibrium force
         extq = N.zeros(len(self.xyz))
         self.f0=self.absforce(extq)

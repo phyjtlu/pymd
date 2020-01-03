@@ -65,12 +65,12 @@ class ebath:
         """
         #friction
         if efric is not None:
-            print "ebath.CheckEmat: got efric, checking"
+            print("ebath.CheckEmat: got efric, checking")
             n = chkShape(efric)
             if n != self.nc:
-                print "ebath.CheckEmat: efric shape error!"
+                print("ebath.CheckEmat: efric shape error!")
                 sys.exit()
-            print "ebath.setEmat: symmetrizing efric"
+            print("ebath.setEmat: symmetrizing efric")
             self.efric = symmetrize(efric)
             self.kernel = N.array([self.efric])
             self.exip = N.zeros(shape=(n,n))
@@ -79,7 +79,7 @@ class ebath:
             self.zeta2=N.zeros(shape=(n,n))
             self.ebath = True
         else:
-            print "ebath.CheckEmat: no efric provided, setting ebath to False"
+            print("ebath.CheckEmat: no efric provided, setting ebath to False")
             self.efric = None
             self.kernel = None
             self.exim = None
@@ -91,41 +91,41 @@ class ebath:
 
         #nc
         if exim is not None:
-            print "ebath.CheckEmat: got exim, checking"
+            print("ebath.CheckEmat: got exim, checking")
             n = chkShape(exim)
             if self.nc != n:
-                print "ebath.CheckEmat: the dimension of exim is wrong!"
+                print("ebath.CheckEmat: the dimension of exim is wrong!")
                 sys.exit(0)
-            print "ebath.setEmat: antisymmetrizing exim"
+            print("ebath.setEmat: antisymmetrizing exim")
             self.exim = antisymmetrize(exim)
 
         if exip is not None:
-            print "ebath.CheckEmat: got exip, checking"
+            print("ebath.CheckEmat: got exip, checking")
             n = chkShape(exip)
             if self.nc != n:
-                print "ebath.setEmat: the dimension of exip is wrong!"
+                print("ebath.setEmat: the dimension of exip is wrong!")
                 sys.exit(0)
-            print "ebath.setEmat: symmetrizing exip"
+            print("ebath.setEmat: symmetrizing exip")
             self.exip = symmetrize(exip)
 
         #renormalization
         if zeta1 is not None:
-            print "ebath.CheckEmat: got zeta1, checking"
+            print("ebath.CheckEmat: got zeta1, checking")
             n = chkShape(zeta1)
             if self.nc != n:
-                print "ebath.setEmat: the dimension of zeta1 is wrong!"
+                print("ebath.setEmat: the dimension of zeta1 is wrong!")
                 sys.exit(0)
-            print "ebath.setEmat: symmetrizing zeta1"
+            print("ebath.setEmat: symmetrizing zeta1")
             self.zeta1 = symmetrize(zeta1)
 
         #berry
         if zeta2 is not None:
-            print "ebath.CheckEmat: got zeta2, checking"
+            print("ebath.CheckEmat: got zeta2, checking")
             n = chkShape(zeta2)
             if self.nc != n:
-                print "ebath.setEmat: the dimension of zeta2 is wrong!"
+                print("ebath.setEmat: the dimension of zeta2 is wrong!")
                 sys.exit(0)
-            print "ebath.setEmat: antisymmetrizing zeta2"
+            print("ebath.setEmat: antisymmetrizing zeta2")
             self.zeta2 = antisymmetrize(zeta2)
         return
 
@@ -134,16 +134,16 @@ class ebath:
         electronic noise 
         """
         if self.nmd is None:
-            print "ebath.gnoi: nmd not set!"
+            print("ebath.gnoi: nmd not set!")
             sys.exit()
         if self.dt is None:
-            print "ebath.gnoi: dt not set!"
+            print("ebath.gnoi: dt not set!")
             sys.exit()
         if self.ebath is False:
-            print "ebath.gnoi: ebath is False!"
+            print("ebath.gnoi: ebath is False!")
             sys.exit()
-        print "ebath.gnoi:classical:", self.classical
-        print "ebath.gnoi:including zero point motion:", self.zpmotion
+        print("ebath.gnoi:classical:", self.classical)
+        print("ebath.gnoi:including zero point motion:", self.zpmotion)
         self.noise=N.real(enoise(self.efric,self.exim,self.exip,\
                   self.bias,self.T,self.wmax,self.dt,self.nmd,self.classical,self.zpmotion))
 
@@ -152,7 +152,7 @@ class ebath:
         effective retarded self-energy in the wideband limit
         """
         if self.wl is None:
-            print "ebath.GetSig:wl is not set"
+            print("ebath.GetSig:wl is not set")
             sys.exit()
         else:
             wl=self.wl
@@ -166,16 +166,16 @@ class ebath:
 
     def SetMDsteps(self,dt,nmd):
         self.dt,self.nmd=dt,nmd
-        print "ebath.SetMDsteps: memory len reset, you need to \
-                regenerate the noise"
+        print("ebath.SetMDsteps: memory len reset, you need to \
+                regenerate the noise")
 
     def setbias(self,bias=0.0):
         """
         set bias applied to the system
         """
         self.bias = bias
-        print "ebath.setbias: bias set to:", self.bias
-        print "ebath.setbias: WARNING--BIAS CHANGED! YOU NEED TO REGENERATE THE NOISE!"
+        print("ebath.setbias: bias set to:", self.bias)
+        print("ebath.setbias: WARNING--BIAS CHANGED! YOU NEED TO REGENERATE THE NOISE!")
 
     def bforce(self,t,phis,qhis):
         """
@@ -193,7 +193,7 @@ class ebath:
                         -mm(self.bias*self.zeta1,exlist(qhis[0],self.cids))\
                         -mm(self.bias*self.zeta2,exlist(phis[0],self.cids))
             else:
-                print "WARNING: nonlocal electronic force not implemented!"
+                print("WARNING: nonlocal electronic force not implemented!")
                 #stophere
                 f=f-mm(self.kernel[i],exlist(phis[i],self.cids))*self.dt
         return mf(f,self.cids,len(phis[0]))
@@ -231,7 +231,7 @@ if __name__=="__main__":
     
         #file = nc.NetCDFFile(filename,'r')
         file = Dataset(filename,'r')
-        print 'Reading from %s' % filename
+        print('Reading from %s' % filename)
     
         # General attributes
         eph.filename = filename
@@ -260,7 +260,7 @@ if __name__=="__main__":
     # electron bath
     #    def __init__(self,cats,T=0.,wmax=None,nw=None,bias=0.,efric=None,exim=None,exip=None,dt=None,nmd=None):
     #----------------------------------------------------
-    ecats=range(13)
+    ecats=list(range(13))
     eb = ebath(ecats,T=300.0,dt=0.05,nmd=10**4,wmax=1.0,nw=500,bias=1.,efric=eph.efric,exim=eph.xim,exip=eph.xip)
     eb.SetMDsteps(8,2**12)
     eb.gnoi()

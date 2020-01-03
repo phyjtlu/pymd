@@ -8,7 +8,7 @@ def CTC(delta,temp,dlist=list(range(1))):
     delta=delta
     temperture=temp
     dlist=dlist
-    times=len(glob.glob('./kappa.*.bath*.run*.dat'))/2
+    times=int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
     kb=np.empty([2,times])
 
     for i in range(2):

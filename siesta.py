@@ -113,24 +113,24 @@ class siesta:
         #PS.pysiestalaunch(label, 8, 'mpirun -np')	#parallel siesta
         PS.pysiestalaunch(self.label,np,'mpirun -np')	#serial siesta
         #PS.pysiestalaunch(self.label)	#serial siesta
-        print "siesta launched!"
+        print("siesta launched!")
 
-        print "running test..."
+        print("running test...")
         #energy,force = PS.pysiestaforce( self.label , self.xyz, self.cell )
         #equilibrium force
         self.initforce()
 
         #print "siesta equilibrium energy:", energy
-        print "siesta equilibrium force:", self.f0 
-        print "test finished!"
+        print("siesta equilibrium force:", self.f0) 
+        print("test finished!")
 
     def quit(self):
         """
         quit siesta
         """
-        print "Quit siesta!"
+        print("Quit siesta!")
         PS.pysiestaquit(self.label)
-        print "Done!"
+        print("Done!")
 
     def newx(self,q):
         """
@@ -151,7 +151,7 @@ class siesta:
     def initforce(self):
         """
         """
-        print "Calculate zero displacement force..."
+        print("Calculate zero displacement force...")
         #equilibrium force
         extq = N.zeros(len(self.xyz))
         self.f0=self.absforce(extq)
@@ -176,7 +176,7 @@ if __name__=="__main__":
             pass
     
         file = nc.NetCDFFile(filename,'r')
-        print 'Reading from %s' % filename
+        print('Reading from %s' % filename)
     
         # General attributes
         mdmath.filename = filename
@@ -195,7 +195,7 @@ if __name__=="__main__":
     xyz = [["Au",a[0],a[1],a[2]] for a in mdmath.xyz]          
 
     tests = siesta("test",xyz,mdmath.cell)
-    print tests.els
+    print(tests.els)
 
     #tests.start()
     #tests.quit()

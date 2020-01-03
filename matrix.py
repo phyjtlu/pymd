@@ -13,7 +13,7 @@ def chkShape(a):
     if(ash[0] == ash[1]):
         return  ash[0]
     else:
-        print "The matrix should be a n by n matrix"
+        print("The matrix should be a n by n matrix")
         sys.exit(0)
 
 def symmetrize(a):
@@ -28,7 +28,7 @@ def dagger(a):
     aa = N.array(a)
     ash = N.shape(aa)
     if(ash[0] != ash[1]):
-        print "Not sqaure matrix"
+        print("Not sqaure matrix")
         sys.exit(0)
     return N.transpose(N.conjugate(aa))
 
@@ -53,9 +53,9 @@ def mm(* args):
 if __name__ == "__main__":
     import numpy as N
     test = [[1,-0.1],[-0.09,1]]
-    print symmetrize(test)
-    print antisymmetrize(test)
+    print(symmetrize(test))
+    print(antisymmetrize(test))
     test = [[1,-0.1],[-0.09,1,2]]
-    print symmetrize(test)
-    print antisymmetrize(test)
+    print(symmetrize(test))
+    print(antisymmetrize(test))
 

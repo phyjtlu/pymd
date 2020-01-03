@@ -18,7 +18,7 @@ def cutlayers(infile,nalayer,nl,nr,outfile,ord=None):
     nr      nr layers from left
     ord     atom lists in new order
     """
-    print "reading ",infile
+    print("reading ",infile)
     geom=MG.Geom(infile)
     xyz=geom.xyz
     snr=geom.snr
@@ -37,7 +37,7 @@ def cutlayers(infile,nalayer,nl,nr,outfile,ord=None):
     nal = nl*nalayer
     nar = nr*nalayer
     if(nal+nar >= na):
-        print "Cuting too many atoms"
+        print("Cuting too many atoms")
         sys.exit(0)
     
     nna = int(na-nal-nar)
@@ -68,9 +68,9 @@ def reordxyz(anr,xyz,ord):
     ord atom list that needs to reord,siesta index
     """
     old=sorted(ord)
-    nl=range(old[0]-1)+[i-1 for i in ord]+range(old[-1],len(xyz))
+    nl=list(range(old[0]-1))+[i-1 for i in ord]+list(range(old[-1],len(xyz)))
     if len(nl)!=len(anr):
-        print "reordxyz:length error"
+        print("reordxyz:length error")
         sys.exit()
 
     return [anr[i] for i in nl],[xyz[i] for i in nl]
@@ -83,7 +83,7 @@ def ReadEPHNCFile(filename):
         pass
 
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     eph.filename = filename
@@ -110,7 +110,7 @@ def ReadNewEPHNCFile(filename):
         pass
 
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     eph.filename = filename
@@ -133,7 +133,7 @@ def WriteEPHNCfile(filename,wl,hw,U,DynMat,SigL,SigR,Friction,NC,NCP,zeta1,zeta2
     Write a NetCDF file contains information for harmonic analysis
     """
     fn=Dataset(filename,'w')
-    print 'Writing to %s' %filename
+    print('Writing to %s' %filename)
     dhw=len(hw)
     dwl=len(wl)
     dsl=len(SigL[0])
@@ -156,19 +156,19 @@ def WriteEPHNCfile(filename,wl,hw,U,DynMat,SigL,SigR,Friction,NC,NCP,zeta1,zeta2
     Write2NetCDFFile(fn,NCP,'NCP',('NPh','NPh',),units='eV**2')
     Write2NetCDFFile(fn,zeta1,'zeta1',('NPh','NPh',),units='eV**2')
     Write2NetCDFFile(fn,zeta2,'zeta2',('NPh','NPh',),units='eV**2')
-    print 'Finished writing.'
+    print('Finished writing.')
     fn.close()
 
 
 def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
-    print 'Write2NetCDFFile:', varLabel, dimensions
+    print('Write2NetCDFFile:', varLabel, dimensions)
     tmp = file.createVariable(varLabel,'d',dimensions)
     tmp[:] = var
     if units: tmp.units = units
     if description: tmp.description = description
 
 def ReadNetCDFVar(file,var):
-    print "ReadNetCDFFile: reading "+ var
+    print("ReadNetCDFFile: reading "+ var)
     f = Dataset(file,'r')
     vv=N.array(f.variables[var])
     f.close()
@@ -182,7 +182,7 @@ def ReadMDNCFile(filename):
         pass
 
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     mdmath.filename = filename
@@ -203,7 +203,7 @@ def ReadDynmat(filename,order=None):
     order:  new order of atoms in siesta index
     """
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     hw= N.array(file.variables['hw'])
     U= N.array(file.variables['U'])
@@ -213,7 +213,7 @@ def ReadDynmat(filename,order=None):
     if order is not None:
         n3=3*len(order)
         if n3 != len(hw):
-            print "ReadDynmat: length of order error!"
+            print("ReadDynmat: length of order error!")
             sys.exit()
         idx=ord2idx(order)
         nU=0.0*U
@@ -239,7 +239,7 @@ def ReadSig(filename):
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     class eph:
         pass
@@ -257,7 +257,7 @@ def ReadwbLambda(filename,order=None):
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     mus=N.array(file.variables['muLR'])
     bias=mus[0]-mus[1]
@@ -276,15 +276,15 @@ def ReadLambda(filename,w0,order=None):
     Reads a NetCDF file that describes dynamical matrix, self-energies
     """
     file = Dataset(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     wl = N.array(file.variables['wl'])
     mus=N.array(file.variables['muLR'])
     bias=mus[0]-mus[1]
-    print "applied bias in Lambda.nc:",bias
+    print("applied bias in Lambda.nc:",bias)
     id=nearest(w0,wl)
-    print "using energy point:", wl[id]
+    print("using energy point:", wl[id])
 
     w00=wl[id]
 

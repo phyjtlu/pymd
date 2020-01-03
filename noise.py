@@ -56,7 +56,7 @@ def phnoise(gamma,wl,T,phcut,dt,nmd,classical=False,zpmotion=True):
 
     The noise spectrum in w space is: 2 w gamma(w) (bose(w,T)+0.5)
     """
-    print "phnoise: generate phonon noise from the correlation function"
+    print("phnoise: generate phonon noise from the correlation function")
 
     hlen = int(nmd/2)
     dw = 2.0*N.pi/dt/nmd
@@ -68,7 +68,7 @@ def phnoise(gamma,wl,T,phcut,dt,nmd,classical=False,zpmotion=True):
     #positive frequency
     phnoi1 = []
     print ("Progress of phonon noise generate")
-    for i in tqdm(range(hlen+1),unit="steps"):
+    for i in tqdm(list(range(hlen+1)),unit="steps"):
         w = dw*i
         #flinterp: linear interpolation of gamma
         #equ(w) = 2.0*(bose(w,T)+0.5)
@@ -118,7 +118,7 @@ def enoisew(wl,efric,exim,exip,bias,T,ecut,classical=False,zpmotion=True):
     np=chkShape(exip)
 
     if nc != nm or nc!=np: 
-        print "enoisew: efric shape error!"
+        print("enoisew: efric shape error!")
         #stoppp
 
     enoi1=N.zeros((nw,nc,nc),N.complex)
@@ -164,7 +164,7 @@ def enoise(efric,exim,exip,bias,T,ecut,dt,nmd,classical=False,zpmotion=True):
 
     enoi1 = []
     print ("Progress of electron noise generate")
-    for i in tqdm(range(hlen+1),unit="steps"):
+    for i in tqdm(list(range(hlen+1)),unit="steps"):
         w = dw*i
         #equilibrium part
         aw = delta*equ(w,ecut,T,classical,zpmotion)
@@ -277,7 +277,7 @@ def vargau(eval,evec,cof=1.0):
     nvec = N.array(evec)
     svec = N.shape(nvec)
     if(lval != svec[0] or svec[0] != svec[1]):
-        print "vargau: shape error"
+        print("vargau: shape error")
         sys.exit(0)
     ##if(min(nval) < -10**-10):
     ##    print "vargau: WARNING, found negative eigenvalue"

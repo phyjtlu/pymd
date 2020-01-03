@@ -12,7 +12,7 @@ def ReadEPHNCFile(filename):
         pass
 
     file = nc.NetCDFFile(filename,'r')
-    print 'Reading from %s' % filename
+    print('Reading from %s' % filename)
 
     # General attributes
     eph.filename = filename
@@ -38,17 +38,17 @@ eph=ReadEPHNCFile(filename)
 
 #
 #user input parameters
-print 'Usage : /usr/bin/python thermal.py  <T> <dT>'
-print 'PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file'
+print('Usage : /usr/bin/python thermal.py  <T> <dT>')
+print('PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file')
 args = sys.argv[1:]
 if len(args) != 2:
-    print 'Usage : /usr/bin/python thermal.py  <T> <dT>'
-    print 'PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file'
+    print('Usage : /usr/bin/python thermal.py  <T> <dT>')
+    print('PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file')
 else:
     T=float(args[0])
     dT=float(args[1])
-    print "Average Temperature: %s\n"%T
-    print "Temperature Difference: %s\n"%(dT)
+    print("Average Temperature: %s\n"%T)
+    print("Temperature Difference: %s\n"%(dT))
 
 #--------------------------------------------------------------------------------------
 curcof = 243414.
@@ -58,19 +58,19 @@ nmd = 2**17
 hwcut=0.03
 #--------------------------------------------------------------------------------------
 #    def __init__(self,dt=None,nmd=None,syslist=None,xyz=None,harmonic=False,dyn=None,T=None,savepq=True):
-print "initialise md"
+print("initialise md")
 test = md(dt,nmd,T)
-print md.__doc__
+print(md.__doc__)
 
 test.setDyn(eph.DynMat)
-syslist=range(len(eph.DynMat)/3)
+syslist=list(range(len(eph.DynMat)/3))
 test.SetSyslist(syslist)
 test.SetHarm(True)
 test.SetMD(dt,nmd)
 test.SetT(T)
-print "number of degrees of freedome: ", test.nph
-print "number of atoms: ", test.na
-print test.nmd
+print("number of degrees of freedome: ", test.nph)
+print("number of atoms: ", test.na)
+print(test.nmd)
 
 #----------------------------------------------------
 #debye bath
@@ -110,7 +110,7 @@ phl = phbath(T+dT/2,[0,1,2,3,4],hwcut,200,test.dt,test.nmd,ml=100,sig=eph.SigL,g
 #phl.gnoi()
 phl.gmem()
 
-print phl.kernel.shape
+print(phl.kernel.shape)
 
 #PP.plot(phl.noise[:,0])
 #PP.savefig("noise_left.pdf",format="pdf")
@@ -120,8 +120,8 @@ print phl.kernel.shape
 #PP.close()
 #add the bath 
 test.AddBath(phl)
-print "memory length: %s\n"%test.ml
-print phl.ml
+print("memory length: %s\n"%test.ml)
+print(phl.ml)
 
 #----------------------------------------------------
 # right bath
@@ -135,7 +135,7 @@ phr = phbath(T-dT/2,[8,9,10,11,12],hwcut,200,test.dt,test.nmd,ml=100,sig=eph.Sig
 #phr.gnoi()
 phr.gmem()
 
-print phr.kernel.shape
+print(phr.kernel.shape)
 
 #PP.plot(phr.noise[:,0])
 #PP.savefig("noise_right.pdf",format="pdf")
@@ -145,14 +145,14 @@ print phr.kernel.shape
 #PP.close()
 #add the bath 
 test.AddBath(phr)
-print "memory length: %s\n"%test.ml
-print phr.ml
+print("memory length: %s\n"%test.ml)
+print(phr.ml)
 #----------------------------------------------------
 
 test.initialise()
 test.ResetHis()
-print test.ml
-print len(test.baths)
+print(test.ml)
+print(len(test.baths))
 
 
 power=N.zeros((test.nmd,2))
@@ -179,8 +179,8 @@ for j in range(nrep):
 #    PP.savefig("curl"+str(j)+".pdf",format="pdf")
 #    PP.close()
 #    
-    print "average current:"+ \
-            str((N.mean(test.baths[0].cur)-N.mean(test.baths[1].cur))*0.5/dT*curcof)
+    print("average current:"+ \
+            str((N.mean(test.baths[0].cur)-N.mean(test.baths[1].cur))*0.5/dT*curcof))
 #    PP.plot(test.baths[1].cur)
 #    PP.savefig("curr"+str(j)+".pdf",format="pdf")
 #    PP.close()

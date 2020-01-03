@@ -50,16 +50,16 @@ AtomicMassTable={'H':1.00794, 'He':4.002602, 'Li':6.941, 'Be':9.012182, \
 #print 'PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file'
 args = sys.argv[1:]
 if len(args) != 3:
-    print "Usage : /usr/bin/python %s <T> <dT> <eV>"%(sys.argv[0])
+    print("Usage : /usr/bin/python %s <T> <dT> <eV>"%(sys.argv[0]))
     #print 'PhononNetCDF : Calculate MAMA using HSSigma and Heph NetCDF file'
     sys.exit()
 else:
     T=float(args[0])
     dT=float(args[1])
     eV=float(args[2])
-    print "Average Temperature: %s\n"%T
-    print "Temperature Difference: %s\n"%(dT)
-    print "Applied bias (muL-muR): %s\n"%(eV)
+    print("Average Temperature: %s\n"%T)
+    print("Temperature Difference: %s\n"%(dT))
+    print("Applied bias (muL-muR): %s\n"%(eV))
 
 #--------------------------------------------------------------------------------------
 curcof = 243414.
@@ -76,7 +76,7 @@ Orderw0 = [5, 2, 4, 3, 1, 6, 7, 8, 9, 14, 11, 12, 13, 10]
 eph=ReadEPHNCFile("oldMD/Sig.nc")
 mathmd=ReadMDNCFile("oldMD/oldMD.nc")
 olddynxyz=N.array([mathmd.xyz[i-1][0] for i in mathmd.dynatom])
-print olddynxyz
+print(olddynxyz)
 
 #--------------------------------------------------------------------------------------
 #import Inelastica.SiestaIO as SIO
@@ -89,9 +89,9 @@ print olddynxyz
 
 #copy 
 os.system("cp ../CGrun/*.vps ../CGrun/*.psf .")
-print "read in structure information"
+print("read in structure information")
 fn=glob.glob("../CGrun/*.XV")
-print fn
+print(fn)
 
 #fullstru="SIESTASTRUCT.fdf"
 #geom2geom fn fullstru 1 1 1
@@ -111,29 +111,29 @@ cell, xyzonly, snr, anr = geom.pbc,geom.xyz,geom.snr,geom.anr
 xyz = [[PeriodicTable[a],b[0],b[1],b[2]] for (a,b) in zip(anr,xyzonly)]
 
 #slist are list of dynamical atoms(system) in python index
-slist=N.array(range(len(xyz)))
+slist=N.array(list(range(len(xyz))))
 slist=slist[nperlayer*(nl-cut):-nperlayer*(nr-cut)]
-print "the following atoms are dynamic:\n"
-print slist
-print len(slist)
+print("the following atoms are dynamic:\n")
+print(slist)
+print(len(slist))
 
 dynxyz=N.array([xyzonly[i] for i in slist])
 
 dmax=N.max(N.abs((olddynxyz[0:5]-olddynxyz[0])-(dynxyz[0:5]-dynxyz[0])))
 dmax2=N.max(N.abs((olddynxyz[-5:]-olddynxyz[-1])-(dynxyz[-5:]-dynxyz[-1])))
-print "max different should not be larger than 0.2:",dmax,dmax2
+print("max different should not be larger than 0.2:",dmax,dmax2)
 if dmax > 0.2: 
-    print "The system is not placed in the right way."
-    print "The self-energy can not be used!!!"
-    print "----------------------------"
-    print dynxyz[0:5]-dynxyz[0]-(olddynxyz[0:5]-olddynxyz[0])
-    print "----------------------------"
-    print 
-    print "----------------------------"
-    print dynxyz[-5:]-dynxyz[-1]-(olddynxyz[-5:]-olddynxyz[-1])
-    print "----------------------------"
-    print 
-    print "----------------------------"
+    print("The system is not placed in the right way.")
+    print("The self-energy can not be used!!!")
+    print("----------------------------")
+    print(dynxyz[0:5]-dynxyz[0]-(olddynxyz[0:5]-olddynxyz[0]))
+    print("----------------------------")
+    print() 
+    print("----------------------------")
+    print(dynxyz[-5:]-dynxyz[-1]-(olddynxyz[-5:]-olddynxyz[-1]))
+    print("----------------------------")
+    print() 
+    print("----------------------------")
     #stopppp
         
 
@@ -147,7 +147,7 @@ dyn,U,hw=ReadDynmat(fn[0],Orderw0)
 #--------------------------------------------------------------------------------------
 #readin the electronic force
 fn=glob.glob("../Lambda*/avLambda.nc")
-print fn
+print(fn)
 eV,eta,xim,xip,zeta1,zeta2=ReadwbLambda(fn[0])
 
 

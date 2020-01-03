@@ -63,18 +63,18 @@ class phbath:
         if self.UseK():
             #calculate the real self-energy
             self.local = False
-            print "phbath: Calculating self-energy is not implemented yet."
+            print("phbath: Calculating self-energy is not implemented yet.")
             sys.exit(0)
 
         elif self.UseG() or self.UsePi():
             if self.UsePi():
                 if len(self.sig[0]) != self.nc:
-                    print "phbath: inconsist between cids and sig!"
+                    print("phbath: inconsist between cids and sig!")
                     sys.exit()
                 self.ggamma()
             if self.UseG():
                 if len(self.gamma[0]) != self.nc:
-                    print "phbath: inconsist between cids and gamma!"
+                    print("phbath: inconsist between cids and gamma!")
                     sys.exit()
         else:
             #use Debye model
@@ -89,16 +89,16 @@ class phbath:
 
     def SetMDsteps(self,dt,nmd):
         self.dt,self.nmd=dt,nmd
-        print "phbath.SetMDsteps: memory len reset, you need to \
-                regenerate the memory kernel and noise"
+        print("phbath.SetMDsteps: memory len reset, you need to \
+                regenerate the memory kernel and noise")
 
     def SetMemlen(self,len):
         self.ml = len
-        print "phbath.SetMemlen: memory len reset, you need to \
-                regenerate the memory kernel"
+        print("phbath.SetMemlen: memory len reset, you need to \
+                regenerate the memory kernel")
 
     def SetT(self,T):
-        print "phbath.SetT: Set temperature  to %s\n"%T
+        print("phbath.SetT: Set temperature  to %s\n"%T)
         self.T=T
 
 
@@ -127,7 +127,7 @@ class phbath:
         Gamma(w) = -Im(Sig(w))/w
         """
         if self.sig is not None:
-            print "2TG test was here2!"
+            print("2TG test was here2!")
             Sig=self.sig
             wl=self.gwl
             a=[]
@@ -138,7 +138,7 @@ class phbath:
                     a.append(-N.imag(Sig[i])/wl[i])
             self.gamma=N.array(a)
         else:
-            print "phbath.Gamma: self.sig is not set, need it to calculate gamma"
+            print("phbath.Gamma: self.sig is not set, need it to calculate gamma")
             sys.exit()
 
     def gnoi(self):
@@ -146,10 +146,10 @@ class phbath:
         generate phonon noise using the friction kernel
         """
         if self.dt is None or self.nmd is None:
-            print "phbath.gnoi: the md information dt and nmd are not set!"
+            print("phbath.gnoi: the md information dt and nmd are not set!")
             sys.exit()
-        print "regenerating noise"
-        print "WARNING: remember to reset t=0 to use the new noise!"
+        print("regenerating noise")
+        print("WARNING: remember to reset t=0 to use the new noise!")
         self.noise=N.real(phnoise(self.gamma,self.gwl,self.T,self.wmax,self.dt,self.nmd))
         #N.linspace(self.gwl[0],self.gwl[-1])
 
@@ -159,7 +159,7 @@ class phbath:
         generate the memory kernel in time domain
         """
         if self.ml is None or self.dt is None:
-            print "phbath.gmem: length of memory kernel not set!"
+            print("phbath.gmem: length of memory kernel not set!")
             sys.exit()
         if self.local:
             self.ml = 1
@@ -184,7 +184,7 @@ class phbath:
                         #self.gamma=N.array(len(self.gwl)/self.kernel.shape[0]*N.real(gamnew)) # Real since its really a cos-transform (kernel(-t)=kernel(t)).
                self.gamma=N.real(gamnew) # Real since its really a cos-transform (kernel(-t)=kernel(t)).
                #self.gamma=N.array(N.real(gamnew)) # Real since its really a cos-transform (kernel(-t)=kernel(t)).
-               print "Test igen:",self.gamma.shape
+               print("Test igen:",self.gamma.shape)
 
     def bforce(self,t,phis,qhis):
         """
@@ -233,7 +233,7 @@ def gamt(tl,wl,gwl,gam,eta_ad=0):
     #print "Weird: ", wl[-1]
     #print wl[1]-wl[0],wl[2]-wl[1]
     if eta_ad==0:
-       print "eta=0"
+       print("eta=0")
        for t in tl:
            tm=[]
            for i in range(len(wl)):
@@ -241,7 +241,7 @@ def gamt(tl,wl,gwl,gam,eta_ad=0):
            #2.0 account for the negative frequency part
            gt.append(2.0*N.mean(N.array(tm),axis=0)*wl[-1]/N.pi)
     else:
-       print "eta!=0"
+       print("eta!=0")
        for t in tl:
            tm=[]
            for i in range(len(wl)):
@@ -260,7 +260,7 @@ if __name__=="__main__":
     from myio import *
     #import matplotlib.pyplot as PP
 #--------------------------------------------------------------------------------------
-    print "testing ebath - begin"
+    print("testing ebath - begin")
 
     eph=ReadNewEPHNCFile("EPH.nc")
 
@@ -275,13 +275,13 @@ if __name__=="__main__":
     T=300.
     hwcut=0.015
     cats=[0,1,2,3,4]
-    print cats
+    print(cats)
     phl = phbath(T,cats,hwcut,200,dt,nmd,ml=250,\
                 sig=eph.SigL,gwl=eph.wl,eta_ad=10**-5)
     phl.gmem()
 
 
-    print "generating phonon noise"
+    print("generating phonon noise")
     phl.gnoi()
 
     f=open("gam.dat","w")

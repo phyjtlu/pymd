@@ -24,7 +24,7 @@ class myfft:
                 numpy.fft.ifft(a)*2*\pi/d\omega
             """
         if(len(a) != self.N):
-            print "MyFFT.Fourier1D: array length error!"
+            print("MyFFT.Fourier1D: array length error!")
             sys.exit(0)
         else:
             nor = 2.*N.pi/self.dw
@@ -44,7 +44,7 @@ class myfft:
                 numpy.fft.fft(a)*d\omega/2/\pi
             """
         if(len(a) != self.N):
-            print "MyFFT.iFourier1D: array length error!"
+            print("MyFFT.iFourier1D: array length error!")
             sys.exit(0)
         else:
             nor = self.dw/2/N.pi
@@ -63,15 +63,15 @@ if __name__ == "__main__":
     
     mfft = myfft(0.1,len(a))
     
-    bl = map(mfft.Fourier1D,al)
+    bl = list(map(mfft.Fourier1D,al))
 
-    bll = N.transpose(map(mfft.iFourier1D,bl))
+    bll = N.transpose(list(map(mfft.iFourier1D,bl)))
 
-    print bll.shape
+    print(bll.shape)
 
-    print (bll.T-al).max()
+    print((bll.T-al).max())
 
     a=N.arange(10)
     mfft = myfft(0.1,len(a))
-    print N.abs(N.array(mfft.iFourier1D(mfft.Fourier1D(a))-a)).max()
+    print(N.abs(N.array(mfft.iFourier1D(mfft.Fourier1D(a))-a)).max())
     

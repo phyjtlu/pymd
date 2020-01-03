@@ -76,7 +76,7 @@ with open("trajectories.xyz", 'w') as trajfile:
         trajfile.write(str(natoms)+'\n'+str(lmp.get_thermo("etotal"))+'\n')
         for ip in range(natoms):
                 trajfile.write(str(els[ip])+'    '+str(xyz[ip*3])+'   '+str(xyz[ip*3+1])+'   '+str(xyz[ip*3+2])+'   '+str(force[ip*3])+'   '+str(force[ip*3+1])+'   '+str(force[ip*3+2])+'\n')
-        for i in tqdm(range(nstep),unit="steps"):
+        for i in tqdm(list(range(nstep)),unit="steps"):
                 lmp.command("run 1")
                 if i % nwrite == 0:
                         xyz=N.array(lmp.gather_atoms("x",1,3))
