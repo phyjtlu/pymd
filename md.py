@@ -765,6 +765,8 @@ def ApplyConstraint(f,constr=None):
     constr is an array of vectors
     This subroutine zerofy the force along each vector
     """
+    if constr is None:
+        return f
     nf=N.array(f)*1.0
     constr=N.array(constr)
     nf[constr]=0
