@@ -1,7 +1,5 @@
-#!/applications/mbrsoft/bin/python
-
 import sys,time
-import os.path
+import os
 import numpy as N
 from numpy import linalg as LA
 #import Scientific.IO.NetCDF as nc
@@ -56,10 +54,10 @@ class md:
         etot        total energy at each time step
         nstep       Output atomic position after nstep MD 
         writepq     Whether to savepq to .nc file when calculating the power spectrum
-
+        rmnc        Remove NC files after calculation
     """
     def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
-                 dyn=None,savepq=True,writepq=True,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
+                 dyn=None,savepq=True,writepq=True,rmnc=False,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
         #drivers
         self.sint = None #siesta instance
         self.brennerrun=None
@@ -74,6 +72,7 @@ class md:
         self.power = N.zeros((self.nmd,2))
         self.power2 = N.zeros((self.nmd,2))
         self.writepq = writepq
+        self.rmnc = rmnc
 
         #var: xyz,nta,els
         self.SetXyz(axyz)
@@ -632,7 +631,6 @@ class md:
             #dump again, to make sure power is all right
             self.dump(i,j)
             
-
             #----------------------------------------------------------------
             #heat current
             #----------------------------------------------------------------
@@ -672,6 +670,13 @@ class md:
                 else:
                     f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
             f.close()
+
+            if self.rmnc:
+                if os.path.exists("MD"+str(j)+".nc"):
+                    print("Remove MD"+str(j)+".nc")
+                    os.remove("MD"+str(j)+".nc")
+                else:
+                    print("No NC file exists.")
 
     def dump(self,ipie,id):
         """
