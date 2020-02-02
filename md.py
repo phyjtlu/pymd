@@ -56,15 +56,15 @@ class md:
         writepq     Whether to savepq to .nc file when calculating the power spectrum
         rmnc        Remove NC files after calculation
     """
-    def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,\
-                 dyn=None,savepq=True,writepq=True,rmnc=False,nrep=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
+    def __init__(self,dt,nmd,T,syslist=None,axyz=None,harmonic=False,dyn=None,savepq=True,writepq=True,rmnc=False,nstart=0,nstop=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
         #drivers
         self.sint = None #siesta instance
         self.brennerrun=None
         self.lammpsrun=None
 
         self.constraint=constr
-        self.nrep=nrep
+        self.nstart=nstart
+        self.nstop=nstop
         self.dt,self.nmd = dt,nmd
         self.harmonic = harmonic
         self.T=T
@@ -548,7 +548,7 @@ class md:
         self.info()
         
         #loop over independent md runs
-        for j in range(self.nrep):   
+        for j in range(self.nstart,self.nstop):   
             print("MD run: "+str(j)+"\n")
             fn="MD"+str(j)+".nc"
             fnm="MD"+str(j-1)+".nc"

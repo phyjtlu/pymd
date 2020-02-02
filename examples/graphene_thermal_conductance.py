@@ -23,7 +23,8 @@ T = 300
 delta = 0.1
 Thot = T*(1+delta)
 Tcold = T*(1-delta)
-nrep = 2
+nstart = 0
+nstop = 2
 # time = 0.658fs #time unit
 dt = 0.25/0.658
 # number of md steps
@@ -47,8 +48,8 @@ print("the following atoms are dynamic:\n")
 print(dynamicatoms)
 print(len(dynamicatoms))
 # if slist is not given, md will initialize it using xyz
-mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True,
-           nrep=nrep, npie=1, constr=fixatoms, nstep=100)
+mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True,rmnc=False,
+           nstart=nstart,nstop=nstop, npie=1, constr=fixatoms, nstep=100)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
 # unit in 0.658211814201041 fs
