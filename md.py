@@ -672,11 +672,11 @@ class md:
             f.close()
 
             if self.rmnc:
-                if os.path.exists("MD"+str(j)+".nc"):
-                    print("Remove MD"+str(j)+".nc")
-                    os.remove("MD"+str(j)+".nc")
-                else:
-                    print("No NC file exists.")
+                if os.path.exists("MD"+str(j-1)+".nc"):
+                    print("Remove MD"+str(j-1)+".nc")
+                    os.remove("MD"+str(j-1)+".nc")
+                #else:
+                #    print("No NC file exists.")
 
     def dump(self,ipie,id):
         """
