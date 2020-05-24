@@ -564,12 +564,15 @@ class md:
                     self.t = ReadNetCDFVar(fn,'t')[0]
                     self.qhis = ReadNetCDFVar(fn,'qhis')
                     self.phis = ReadNetCDFVar(fn,'phis')
-                    self.power =ReadNetCDFVar(fn,'power')
-                    self.power2 =ReadNetCDFVar(fn,'power2')
                     #TODO too long to save, cutoff power lengh
                     if self.writepq:
+                        self.power =ReadNetCDFVar(fn,'power')
+                        self.power2 =ReadNetCDFVar(fn,'power2')
                         self.qs = ReadNetCDFVar(fn,'qs')
                         self.ps = ReadNetCDFVar(fn,'ps')
+                    else:
+                        print("writepq need to be set true to continue")
+                        sys.exit(0)
                     for i in range(len(self.baths)):
                         self.baths[i].noise=ReadNetCDFVar(fn,'noise'+str(i))
 
@@ -712,9 +715,9 @@ class md:
             Write2NetCDFFile(NCfile,self.ps,'ps',('nnmd','nph',),units='')
             Write2NetCDFFile(NCfile,self.qs,'qs',('nnmd','nph',),units='')
 
-        #power spectrum
-        Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
-        Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
+            #power spectrum
+            Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
+            Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
         #energy
         Write2NetCDFFile(NCfile,self.etot,'energy',('nnmd',),units='')
         #velocity
