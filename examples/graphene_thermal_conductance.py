@@ -20,9 +20,9 @@ lammpsinfile = [
 ]
 # temperature
 T = 300
-delta = 0.1
-Thot = T*(1+delta)
-Tcold = T*(1-delta)
+delta = 0.2
+Thot = T*(1+delta/2)
+Tcold = T*(1-delta/2)
 nstart = 0
 nstop = 2
 # time = 0.658fs #time unit
@@ -70,5 +70,6 @@ mdrun.AddBath(ebr)
 mdrun.Run()
 # close lammps instant
 lmp.quit()
-CalTC(deltaT=Thot-Tcold, temp=T, dlist=0)
+CalHF()
+CalTC(delta=delta, temp=T, dlist=0)
 # ----------------
