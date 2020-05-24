@@ -552,7 +552,7 @@ class md:
             print("MD run: "+str(j)+"\n")
             fn="MD"+str(j)+".nc"
             fnm="MD"+str(j-1)+".nc"
-
+            
             if os.path.isfile(fn):
                 print("find file: "+fn+"\n")
                 ipie = int(ReadNetCDFVar(fn,'ipie')[0])
@@ -566,6 +566,7 @@ class md:
                     self.phis = ReadNetCDFVar(fn,'phis')
                     self.power =ReadNetCDFVar(fn,'power')
                     self.power2 =ReadNetCDFVar(fn,'power2')
+                    #TODO too long to save, cutoff power lengh
                     if self.writepq:
                         self.qs = ReadNetCDFVar(fn,'qs')
                         self.ps = ReadNetCDFVar(fn,'ps')
@@ -623,8 +624,8 @@ class md:
             power=N.copy(self.power)
             power2=N.copy(self.power2)
             self.GetPower()
-            power=(power*j+self.power)/float(j+1)
-            power2=(power2*j+self.power2)/float(j+1)
+            power=(power*(j-self.nstart)+self.power)/float(j-self.nstart+1)
+            power2=(power2*(j-self.nstart)+self.power2)/float(j-self.nstart+1)
             self.power=N.copy(power)
             self.power2=N.copy(power2)
 
