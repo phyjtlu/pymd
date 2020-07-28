@@ -30,7 +30,8 @@ class ebath:
     def __init__(self,cats,T,dt,nmd,wmax=None,nw=None,bias=0.,\
             efric=None,exim=None,exip=None,zeta1=None,zeta2=None,classical=False,zpmotion=True):
         self.cats=N.array(cats,dtype='int')
-        self.cids = N.array([[3*c+0,3*c+1,3*c+2] for c in cats]).flatten()
+        #self.cids = N.array([[3*c+0,3*c+1,3*c+2] for c in cats]).flatten()
+        self.cids=N.array(cats,dtype='int')
         self.nc = len(self.cids)
         self.T,self.wmax = T,wmax
         self.nw,self.bias = nw,bias
