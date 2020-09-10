@@ -7,7 +7,7 @@ from matrix import *
 from md import *
 from myio import *
 from phbath import *
-from postprocessing import *
+from posproc import *
 
 lammpsinfile = [
     #"log none",

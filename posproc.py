@@ -1,6 +1,5 @@
 import glob
 import numpy as np
-#from matplotlib import pyplot as plt
 
 
 def CalHF(dlist=1):
@@ -68,13 +67,3 @@ def CalTC(delta, dlist=0):
     with open('thermalconductance.'+str(int(temperture))+'.dat', 'w') as f:
         f.write("Temperture\t"+str(temperture)+"\n"+"ThermalConductance\t"+str(kappa)+"\n" +
                 "Mean\t"+str(np.mean(kappa))+"\n"+"StandardDeviation\t"+str(np.std(kappa))+"\n")
-
-
-def CalPS():
-    # calculate average powerspectra
-    pass
-
-#powerspectra = np.loadtxt('power2.300.run1.dat')
-#
-# plt.plot(powerspectra[:,0],powerspectra[:,1])
-# plt.show()
