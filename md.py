@@ -807,19 +807,16 @@ class md:
         #els
         #Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
 
-        #noise series
-        for i in range(len(self.baths)):
-            #NCfile.createDimension('n'+str(i),self.baths[i].nc)
-            Write2NetCDFFile(NCfile,self.baths[i].noise,'noise'+str(i),\
-                            ('nnmd','n'+str(i),),units='')
-            Write2NetCDFFile(NCfile,self.fhis[i],'fhis'+str(i),('nnmd','nph',),units='')
-
-
-        #save all the histories of p,q or not
         if self.writepq:
+            #noise series
+            for i in range(len(self.baths)):
+                #NCfile.createDimension('n'+str(i),self.baths[i].nc)
+                Write2NetCDFFile(NCfile,self.baths[i].noise,'noise'+str(i),\
+                                ('nnmd','n'+str(i),),units='')
+                Write2NetCDFFile(NCfile,self.fhis[i],'fhis'+str(i),('nnmd','nph',),units='')
+            #save all the histories of p,q or not
             Write2NetCDFFile(NCfile,self.ps,'ps',('nnmd','nph',),units='')
             Write2NetCDFFile(NCfile,self.qs,'qs',('nnmd','nph',),units='')
-
             #power spectrum
             Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
             Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
