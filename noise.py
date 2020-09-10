@@ -1,5 +1,3 @@
-#!/applications/mbrsoft/bin/python
-
 import sys
 import numpy as N
 from numpy import linalg as LA
@@ -68,7 +66,7 @@ def phnoise(gamma,wl,T,phcut,dt,nmd,classical=False,zpmotion=True):
     #positive frequency
     phnoi1 = []
     print ("Progress of phonon noise generate")
-    for i in tqdm(list(range(hlen+1)),unit="steps",mininterval=1):
+    for i in tqdm(range(hlen+1),unit="steps",mininterval=1):
         w = dw*i
         #flinterp: linear interpolation of gamma
         #equ(w) = 2.0*(bose(w,T)+0.5)
@@ -164,7 +162,7 @@ def enoise(efric,exim,exip,bias,T,ecut,dt,nmd,classical=False,zpmotion=True):
 
     enoi1 = []
     print ("Progress of electron noise generate")
-    for i in tqdm(list(range(hlen+1)),unit="steps",mininterval=1):
+    for i in tqdm(range(hlen+1),unit="steps",mininterval=1):
         w = dw*i
         #equilibrium part
         aw = delta*equ(w,ecut,T,classical,zpmotion)
@@ -243,7 +241,7 @@ def equ(w,cut,T,classical=False,zpmotion=True):
     cut     electron band cutoff energy
     T       equilibrium electronic temperature
     """
-    small=10e-20
+    #small=10e-20
     hw = U.hbar*w
     if zpmotion is True:
         zp=0.5
@@ -273,7 +271,7 @@ def vargau(eval,evec,cof=1.0):
     """
     #print "vargau: checking eigen values and vectors"
     lval = len(eval)
-    nval = N.array(eval)
+    #nval = N.array(eval)
     nvec = N.array(evec)
     svec = N.shape(nvec)
     if(lval != svec[0] or svec[0] != svec[1]):

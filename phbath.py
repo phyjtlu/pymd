@@ -1,5 +1,3 @@
-#!/applications/mbrsoft/bin/python
-
 import sys
 import numpy as N
 from noise import *

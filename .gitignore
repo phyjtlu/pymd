@@ -1,3 +1,6 @@
 *.pyc
 *.xyz
+*.nc
+*.dat
+*.ani
 log.lammps

@@ -1,5 +1,3 @@
-#!/applications/mbrsoft/bin/python
-
 """
 units used in this program
 """

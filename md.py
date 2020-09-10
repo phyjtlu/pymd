@@ -1,4 +1,5 @@
-import sys,time
+import sys
+import time
 import os
 import numpy as N
 from numpy import linalg as LA
@@ -18,6 +19,7 @@ from spectrum import *
 1. Now we always save fhis for each bath, this may do not work for large
     structures.
 """
+
 
 class md:
     """
@@ -48,7 +50,7 @@ class md:
         t,p,q       md time step, velocity and position vector at t
 
         q0,f0       q and f of previous potforce run
-        
+
         baths       List of baths connecting to the system
         fbaths      Force from all the baths at time t
         etot        total energy at each time step
@@ -56,51 +58,52 @@ class md:
         writepq     Whether to savepq to .nc file when calculating the power spectrum
         rmnc        Remove NC files after calculation
     """
-    def __init__(self,dt,nmd,T, ecatsl, ecatsr, slist, cutslist=None, syslist=None,axyz=None,harmonic=False,dyn=None,savepq=True,writepq=True,rmnc=False,nstart=0,nstop=1,npie=8,constr=None,nstep=100,md2ang=0.06466):
-        #drivers
-        self.sint = None #siesta instance
-        self.brennerrun=None
-        self.lammpsrun=None
 
-        self.constraint=constr
-        self.nstart=nstart
-        self.nstop=nstop
-        self.dt,self.nmd = dt,nmd
+    def __init__(self, dt, nmd, T, ecatsl, ecatsr, slist, cutslist=None, syslist=None, axyz=None, harmonic=False, dyn=None, savepq=True, writepq=True, rmnc=False, nstart=0, nstop=1, npie=8, constr=None, nstep=100, md2ang=0.06466):
+        # drivers
+        self.sint = None  # siesta instance
+        self.brennerrun = None
+        self.lammpsrun = None
+
+        self.constraint = constr
+        self.nstart = nstart
+        self.nstop = nstop
+        self.dt, self.nmd = dt, nmd
         self.harmonic = harmonic
-        self.T=T
-        self.npie=npie
-        self.slist=slist
-        self.cutslist=cutslist
-        self.ecatsl=ecatsl
-        self.ecatsr=ecatsr
-        self.power = N.zeros((self.nmd,2))
-        self.power2 = N.zeros((self.nmd,2))
-        self.powerecatsl = N.empty((self.nmd,2))
-        self.powerecatsr = N.empty((self.nmd,2))
-        self.powerslist = N.empty((self.nmd,2))
+        self.T = T
+        self.npie = npie
+        self.slist = slist
+        self.cutslist = cutslist
+        self.ecatsl = ecatsl
+        self.ecatsr = ecatsr
+        self.power = N.zeros((self.nmd, 2))
+        self.power2 = N.zeros((self.nmd, 2))
+        self.powerecatsl = N.empty((self.nmd, 2))
+        self.powerecatsr = N.empty((self.nmd, 2))
+        self.powerslist = N.empty((self.nmd, 2))
         self.writepq = writepq
         self.rmnc = rmnc
         if self.cutslist is not None:
-            self.cutslist=cutslist
-            self.powercutslist = N.empty((len(self.cutslist),self.nmd,2))
-        #var: xyz,nta,els
+            self.cutslist = cutslist
+            self.powercutslist = N.empty((len(self.cutslist), self.nmd, 2))
+        # var: xyz,nta,els
         self.SetXyz(axyz)
-        #var: syslist,na,nph
+        # var: syslist,na,nph
         if syslist is not None:
-            if(len(syslist) > self.nta or min(syslist) < 0 or \
+            if(len(syslist) > self.nta or min(syslist) < 0 or
                max(syslist) > self.nta-1):
                 print("syslist out of range")
                 sys.exit(0)
             else:
-                self.syslist = N.array(syslist,dtype='int')
-            #number of system atoms
+                self.syslist = N.array(syslist, dtype='int')
+            # number of system atoms
             self.na = len(syslist)
-            #number of system degrees of freedom
+            # number of system degrees of freedom
             self.nph = 3*len(syslist)
         elif axyz is not None:
-            #set using axyz
-            #all are system atoms
-            self.syslist = N.array(list(range(len(axyz))),dtype='int')
+            # set using axyz
+            # all are system atoms
+            self.syslist = N.array(range(len(axyz)), dtype='int')
             self.na = len(self.syslist)
             self.nph = 3*len(self.syslist)
         else:
@@ -108,33 +111,31 @@ class md:
             self.na = None
             self.nph = None
 
-
-
         self.ml = 1
-        self.t=0
-        self.p=[]
-        self.q=[]
-        self.pinit=[]
-        self.qinit=[]
-        self.q0=[]
-        self.f0=[]
+        self.t = 0
+        self.p = []
+        self.q = []
+        self.pinit = []
+        self.qinit = []
+        self.q0 = []
+        self.f0 = []
 
         #qhis and phis
 
-        #list of baths
-        self.baths=[]
-        self.fhis=[]
-        self.fbaths=[]
+        # list of baths
+        self.baths = []
+        self.fhis = []
+        self.fbaths = []
 
-        self.etot=N.zeros(nmd)
+        self.etot = N.zeros(nmd)
 
-        #vars: dyn,hw,U,nph
+        # vars: dyn,hw,U,nph
         self.setDyn(dyn)
 
-        #var: ps,qs,power,savepq
+        # var: ps,qs,power,savepq
         self.ResetSavepq(savepq)
-#--------------------------------------------------------------
-#Add tracking of atomic trajectories by Li Gen.
+# --------------------------------------------------------------
+# Add tracking of atomic trajectories by Li Gen.
         self.md2ang = md2ang
         self.mass = []
         self.get_atommass()
@@ -145,9 +146,9 @@ class md:
     def get_atommass(self):
         for atomsname in self.els:
             for key, value in list(U.AtomicMassTable.items()):
-                if atomsname==key:
+                if atomsname == key:
                     self.mass.append(value)
-#--------------------------------------------------------------
+# --------------------------------------------------------------
 
     def info(self):
         print("--------------------------------------------\n")
@@ -162,27 +163,26 @@ class md:
 
         if self.dyn is None:
             print("md.info: No dynamical matrix input!")
-            #sys.exit()
+            # sys.exit()
 
-
-    def ResetSavepq(self,savepq=True):
+    def ResetSavepq(self, savepq=True):
         self.savepq = savepq
         if self.nmd is not None and self.nph is not None:
-            self.ps = N.zeros((self.nmd,self.nph))
-            self.qs = N.zeros((self.nmd,self.nph))
+            self.ps = N.zeros((self.nmd, self.nph))
+            self.qs = N.zeros((self.nmd, self.nph))
             #self.power = N.zeros((self.nmd,2))
         else:
             print("md.ResetSavepq: nmd or nph is not set!")
 
-    #def energy(self):
+    # def energy(self):
     #    return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
     def energy(self):
         """
         kinetic energy
         """
-        return 0.5*mm(self.p,self.p)
+        return 0.5*mm(self.p, self.p)
 
-    def AddBath(self,bath):
+    def AddBath(self, bath):
         """
         Adding a bath
         """
@@ -193,27 +193,27 @@ class md:
             print("md.AddBath: number of md steps nmd not consistent!")
             sys.exit()
         self.baths.append(bath)
-        #make sure we save enought memory for all the baths
+        # make sure we save enought memory for all the baths
         if(bath.ml > self.ml):
             self.ml = bath.ml
         self.fbaths.append(N.zeros(self.nph))
-        #force history
-        self.fhis.append(N.zeros((self.nmd,self.nph)))
+        # force history
+        self.fhis.append(N.zeros((self.nmd, self.nph)))
 
-    def SetT(self,T):
-        self.T=T
+    def SetT(self, T):
+        self.T = T
 
-    def SetMD(self,dt,nmd):
-        self.dt,self.nmd=dt,nmd
-        self.etot=N.zeros(nmd)
+    def SetMD(self, dt, nmd):
+        self.dt, self.nmd = dt, nmd
+        self.etot = N.zeros(nmd)
 
-    def SetHarm(self,harmonic):
+    def SetHarm(self, harmonic):
         self.harmonic = harmonic
 
-    def SetXyz(self,axyz):
+    def SetXyz(self, axyz):
         if axyz is not None:
             print("md.SetXyz:Seting xyz and nta")
-            self.xyz = N.array([a[1:] for a in axyz],dtype='d').flatten()
+            self.xyz = N.array([a[1:] for a in axyz], dtype='d').flatten()
             self.els = [a[0] for a in axyz]
             self.nta = len(axyz)
         else:
@@ -221,19 +221,19 @@ class md:
             self.els = None
             self.nta = None
 
-    def SetSyslist(self,syslist):
+    def SetSyslist(self, syslist):
         print("md.SetXyz:Seting syslist")
-        self.syslist= N.array(syslist)
-        #number of system atoms
+        self.syslist = N.array(syslist)
+        # number of system atoms
         self.na = len(syslist)
-        #number of system degrees of freedom
+        # number of system degrees of freedom
         self.nph = 3*len(syslist)
         if self.xyz is not None:
             if len(self.syslist) > self.nta:
                 print("md.SetSyslist:system atom number larger than total atom number")
                 sys.exit()
 
-    def setDyn(self,dyn=None):
+    def setDyn(self, dyn=None):
         """
         set up the dynamical matrix of the system
         """
@@ -249,21 +249,21 @@ class md:
             print("md.setDyn: symmetrizing dynamical matrix")
             self.dyn = symmetrize(ndyn)
 
-            av,au = LA.eigh(self.dyn)
-            if min(av)<0:
+            av, au = LA.eigh(self.dyn)
+            if min(av) < 0:
                 print("md.setDyn: there are negative frequencies")
                 print("md.setDyn: I will remove them")
-                avn=0.*av
+                avn = 0.*av
                 for i in range(len(av)):
-                    if av[i]<0:
-                        avn[i]=0.
+                    if av[i] < 0:
+                        avn[i] = 0.
                     else:
-                        avn[i]=av[i]
-                av=avn
-            self.hw = N.array(list(map(N.real,list(map(N.sqrt,av)))))
+                        avn[i] = av[i]
+                av = avn
+            self.hw = N.array(list(map(N.real, list(map(N.sqrt, av)))))
             self.U = N.array(au)
-            self.dyn=mm(self.U,N.diag(N.array(av)),N.transpose(self.U))
-            #if min(av)>=0:
+            self.dyn = mm(self.U, N.diag(N.array(av)), N.transpose(self.U))
+            # if min(av)>=0:
             #    print "the dynmat should not change much"
             #    print "max diff. of dynmatrix:", abs(self.dyn-ndyn).sum()
             print("md.setDyn: Done")
@@ -272,8 +272,7 @@ class md:
             self.hw = None
             self.U = None
             print("md.setDyn: no dynamical matrix provided!")
-            #sys.exit()
-            
+            # sys.exit()
 
     def initialise(self):
         """
@@ -282,35 +281,35 @@ class md:
         self.t = 0
         if self.dyn is None:
             print("md.initial: no dynamical matrix!")
-            #sys.exit()
+            # sys.exit()
             print("p,q set to 0")
-            self.p=N.zeros(self.nph)
-            self.q=N.zeros(self.nph)
-            self.pinit=N.zeros(self.nph)
-            self.qinit=N.zeros(self.nph)
+            self.p = N.zeros(self.nph)
+            self.q = N.zeros(self.nph)
+            self.pinit = N.zeros(self.nph)
+            self.qinit = N.zeros(self.nph)
         else:
-            av=self.hw
-            au=self.U
+            av = self.hw
+            au = self.U
 
-            dis=N.zeros(len(av))
-            vel=N.zeros(len(av))
+            dis = N.zeros(len(av))
+            vel = N.zeros(len(av))
             for i in range(len(av)):
-                #cutoff energy 0.005 eV
-                #do not initialise motion due to slow modes
-                #because it may gives large displacement
+                # cutoff energy 0.005 eV
+                # do not initialise motion due to slow modes
+                # because it may gives large displacement
                 if av[i] < 0.01:
-                    am=0.0
+                    am = 0.0
                 else:
-                    am=((bose(av[i],self.T)+0.5)*2.0/av[i])**0.5
-                r=N.random.rand()
-                dis = dis + au[:,i]*am*N.cos(2.*N.pi*r)
-                vel = vel - av[i]*au[:,i]*am*N.sin(2.*N.pi*r)
+                    am = ((bose(av[i], self.T)+0.5)*2.0/av[i])**0.5
+                r = N.random.rand()
+                dis = dis + au[:, i]*am*N.cos(2.*N.pi*r)
+                vel = vel - av[i]*au[:, i]*am*N.sin(2.*N.pi*r)
 
-                dis = ApplyConstraint(dis,self.constraint)
-                vel = ApplyConstraint(vel,self.constraint)
+                dis = ApplyConstraint(dis, self.constraint)
+                vel = ApplyConstraint(vel, self.constraint)
 
-            self.p=vel
-            self.q=dis
+            self.p = vel
+            self.q = dis
             self.pinit = vel
             self.qinit = dis
 
@@ -319,8 +318,8 @@ class md:
         set history list of the friction kernel to zeros
         """
         if self.nph is not None and self.ml is not None:
-            self.qhis=N.zeros((self.ml,self.nph))
-            self.phis=N.zeros((self.ml,self.nph))
+            self.qhis = N.zeros((self.ml, self.nph))
+            self.phis = N.zeros((self.ml, self.nph))
         else:
             print("self.nph and self.ml are not set!")
             sys.exit()
@@ -334,85 +333,87 @@ class md:
             print("md.GetPower: you need to set savepq to True!")
             sys.exit()
         print("md.GetPower: generate power spectrum from trajectories.")
-        self.power = powerspec(self.qs,self.dt,self.nmd)
-        self.power2 = powerspec2(self.ps,self.dt,self.nmd)
-        self.powerecatsl = powerspec(self.qs[:,self.ecatsl],self.dt,self.nmd)
-        self.powerecatsr = powerspec(self.qs[:,self.ecatsr],self.dt,self.nmd)
-        self.powerslist = powerspec(self.qs[:,self.slist],self.dt,self.nmd)
+        self.power = powerspec(self.qs, self.dt, self.nmd)
+        self.power2 = powerspec2(self.ps, self.dt, self.nmd)
+        self.powerecatsl = powerspec(
+            self.qs[:, self.ecatsl], self.dt, self.nmd)
+        self.powerecatsr = powerspec(
+            self.qs[:, self.ecatsr], self.dt, self.nmd)
+        self.powerslist = powerspec(self.qs[:, self.slist], self.dt, self.nmd)
         if self.cutslist is not None:
             for layers in range(len(self.cutslist)):
-                self.powercutslist[layers] = powerspec(self.qs[:,self.cutslist[layers]],self.dt,self.nmd)
+                self.powercutslist[layers] = powerspec(
+                    self.qs[:, self.cutslist[layers]], self.dt, self.nmd)
 
-    def vv(self,id):
+    def vv(self, id):
         """
         velocity-verlet method integrator
         """
-        #print "velocity-verlet integrator"
-        t,p,q = self.t,self.p,self.q
+        # print "velocity-verlet integrator"
+        t, p, q = self.t, self.p, self.q
         t = int(t)
         if self.savepq:
-            self.ps[t%self.nmd] = p
-            self.qs[t%self.nmd] = q
+            self.ps[t % self.nmd] = p
+            self.qs[t % self.nmd] = q
 
-        #total energy
+        # total energy
         #self.etot = N.append(self.etot,self.energy())
-        self.etot[t%self.nmd] = self.energy()
+        self.etot[t % self.nmd] = self.energy()
 
-        #update history here
-        self.qhis=rpadleft(self.qhis,q)
-        self.phis=rpadleft(self.phis,p)
+        # update history here
+        self.qhis = rpadleft(self.qhis, q)
+        self.phis = rpadleft(self.phis, p)
 
-        #calculate displacement at next time
-        f = self.force(t,p,q,0)
+        # calculate displacement at next time
+        f = self.force(t, p, q, 0)
         pthalf = p + f*self.dt/2.0
         qtt = q + p*self.dt + f*self.dt**2/2.0
 
-        #evaluate current 
+        # evaluate current
         for i in range(len(self.baths)):
-            #self.baths[i].cur=N.append(self.baths[i].cur,mm(self.fbaths[i],p))
-            self.baths[i].cur[t%self.nmd] = mm(self.fbaths[i],p)
-            self.fhis[i][t%self.nmd] = self.fbaths[i]
+            # self.baths[i].cur=N.append(self.baths[i].cur,mm(self.fbaths[i],p))
+            self.baths[i].cur[t % self.nmd] = mm(self.fbaths[i], p)
+            self.fhis[i][t % self.nmd] = self.fbaths[i]
 
+        # calculate velocity at next time
+        f = self.force(t, pthalf, qtt, 1)
+        ptt1 = pthalf+self.dt*f/2.0
+        f = self.force(t, ptt1, qtt, 1)
+        ptt2 = pthalf+self.dt*f/2.0
 
-        #calculate velocity at next time
-        f = self.force(t,pthalf,qtt,1)
-        ptt1=pthalf+self.dt*f/2.0
-        f=self.force(t,ptt1,qtt,1)
-        ptt2=pthalf+self.dt*f/2.0
+        # constraint
+        ptt2 = ApplyConstraint(ptt2, self.constraint)
+        qtt = ApplyConstraint(qtt, self.constraint)
 
-        #constraint
-        ptt2=ApplyConstraint(ptt2,self.constraint)
-        qtt=ApplyConstraint(qtt,self.constraint)
+        t = t+1
+        self.t, self.p, self.q, self.f = t, ptt2, qtt, f
 
-        t=t+1
-        self.t,self.p,self.q,self.f = t,ptt2,qtt,f
-
-    def force(self,t,p,q,id=0):
+    def force(self, t, p, q, id=0):
         """
         force due to the dynamical matrix
         """
         it = t+id
 
-        #print "potential force"
-        pf=self.potforce(q)
+        # print "potential force"
+        pf = self.potforce(q)
 
-        #apply constraint
-        #pf=ApplyConstraint(pf,self.constraint)
+        # apply constraint
+        # pf=ApplyConstraint(pf,self.constraint)
 
-        #print "friction and random force "
+        # print "friction and random force "
         if id == 0:
             tphis = self.phis
             tqhis = self.qhis
         else:
-            tphis = rpadleft(self.phis,p)
-            tqhis = rpadleft(self.qhis,q)
+            tphis = rpadleft(self.phis, p)
+            tqhis = rpadleft(self.qhis, q)
         for i in range(len(self.baths)):
-            self.fbaths[i] = self.baths[i].bforce(it,tphis,tqhis)
+            self.fbaths[i] = self.baths[i].bforce(it, tphis, tqhis)
             pf = pf + self.fbaths[i]
-        
+
         return pf
 
-    #def potforce(self,q):
+    # def potforce(self,q):
     #    """
     #    potential force
     #    """
@@ -422,7 +423,7 @@ class md:
     #        #use dynamical matrix
     #        if self.sint is None:
     #            f=-mdot(self.dyn,q)
-    #        #use siesta force 
+    #        #use siesta force
     #        else:
     #            slist=self.syslist
     #            if len(q)/3 != len(slist):
@@ -435,12 +436,12 @@ class md:
     #            f = N.zeros(len(q))
     #            for i in range(len(f)/3):
     #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-    #        #save 
+    #        #save
     #        self.q0=q
     #        self.f0=f
     #        return f
 #
-    #def potforce(self,q):
+    # def potforce(self,q):
     #    """
     #    Tue's version including brenner
     #    """
@@ -453,7 +454,7 @@ class md:
     #                f=-mdot(self.dyn,q)
     #            else:
     #                f=self.brennerrun.force(q)
-    #        #use siesta force 
+    #        #use siesta force
     #        else:
     #            slist=self.syslist
     #            if len(q)/3 != len(slist):
@@ -466,24 +467,24 @@ class md:
     #            f = N.zeros(len(q))
     #            for i in range(len(f)/3):
     #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-    #        #save 
+    #        #save
     #        self.q0=q
     #        self.f0=f
     #        return f
 
-    def potforce(self,q):
+    def potforce(self, q):
         """
         Potential force from drivers
         8Nov2018:
         Now we have the following 4 drivers:
             Siesta, Brenner, Lammps, harmonic
-        
+
         q is an array of displacements of the atoms in self.syslist
         """
-        #self.q0 and f0 are the displacment and
-        #force of last call. If the displacement
-        #did not change, use the old force.
-        if sameq(q,self.q0):
+        # self.q0 and f0 are the displacment and
+        # force of last call. If the displacement
+        # did not change, use the old force.
+        if sameq(q, self.q0):
             return self.f0
 
         if len(q)/3 != len(self.syslist):
@@ -493,386 +494,416 @@ class md:
         for i in range(len(self.syslist)):
             extq[3*self.syslist[i]:3*(self.syslist[i]+1)] = q[3*i:3*(i+1)]
 
-        #search for possible drivers
-        #use siesta force 
+        # search for possible drivers
+        # use siesta force
         if self.sint is not None:
             fa = self.sint.force(extq)
             f = N.zeros(len(q))
             for i in range(len(f)/3):
                 f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
-        #use brenner force 
+        # use brenner force
         elif self.brennerrun is not None:
-            f=self.brennerrun.force(q)
-        #use lammps force 
-        elif  self.lammpsrun is not None:
-            fa=self.lammpsrun.force(extq)
+            f = self.brennerrun.force(q)
+        # use lammps force
+        elif self.lammpsrun is not None:
+            fa = self.lammpsrun.force(extq)
             f = N.zeros(len(q))
             for i in range(int(len(f)/3)):
                 f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
-        #use dynamical matrix 
+        # use dynamical matrix
         elif self.dyn is not None:
-            f=-mdot(self.dyn,q)
+            f = -1*mdot(self.dyn, q)
         else:
             print("no driver, no md")
             sys.exit()
 
-        #save 
-        self.q0=q
-        self.f0=f
+        # save
+        self.q0 = q
+        self.f0 = f
         return f
 
-
-    def AddSint(self,sint):
+    def AddSint(self, sint):
         """
         add siesta instance
         """
-        #if sint.xyz != self.xyz:
+        # if sint.xyz != self.xyz:
         #    print "md.AddSint: xyz not consistent!"
         #    sys.exit()
-        #if sint.els != self.els:
+        # if sint.els != self.els:
         #    print "md.AddSint: els not consistent!"
         #    sys.exit()
         self.sint = sint
-        #print "Starting Siesta Server..."
-        #self.sint.start()
+        # print "Starting Siesta Server..."
+        # self.sint.start()
 
-    def AddBint(self,bint):
+    def AddBint(self, bint):
         """
         add Brenner instance
         """
         self.brennerrun = bint
 
-
-    def AddLMPint(self,lint):
+    def AddLMPint(self, lint):
         """
         add Lammps instance
         """
         self.lammpsrun = lint
 
-
     def Run(self):
         """
         define nrep,npie
         """
-        #initialise t,p,q
-        #if find old unfinished data,
-        #they are over-written
+        # initialise t,p,q
+        # if find old unfinished data,
+        # they are over-written
         self.initialise()
-        #reset qhis,phis
+        # reset qhis,phis
         self.ResetHis()
         self.info()
-        
-        #loop over independent md runs
-        for j in range(self.nstart,self.nstop):   
+
+        # loop over independent md runs
+        for j in range(self.nstart, self.nstop):
             print("MD run: "+str(j)+"\n")
-            fn="MD"+str(j)+".nc"
-            fnm="MD"+str(j-1)+".nc"
-            
+            fn = "MD"+str(j)+".nc"
+            fnm = "MD"+str(j-1)+".nc"
+
             if os.path.isfile(fn):
                 print("find file: "+fn+"\n")
-                ipie = int(ReadNetCDFVar(fn,'ipie')[0])
+                ipie = int(ReadNetCDFVar(fn, 'ipie')[0])
                 if(ipie+1 < self.npie):
                     print("unfinished run")
                     print("reading resume information")
-                    self.p = ReadNetCDFVar(fn,'p')
-                    self.q = ReadNetCDFVar(fn,'q')
-                    self.t = ReadNetCDFVar(fn,'t')[0]
-                    self.qhis = ReadNetCDFVar(fn,'qhis')
-                    self.phis = ReadNetCDFVar(fn,'phis')
-                    #TODO too long to save, cutoff power lengh
+                    self.p = ReadNetCDFVar(fn, 'p')
+                    self.q = ReadNetCDFVar(fn, 'q')
+                    self.t = ReadNetCDFVar(fn, 't')[0]
+                    self.qhis = ReadNetCDFVar(fn, 'qhis')
+                    self.phis = ReadNetCDFVar(fn, 'phis')
+                    # TODO too long to save, cutoff power lengh
                     if self.writepq:
-                        self.power =ReadNetCDFVar(fn,'power')
-                        self.power2 =ReadNetCDFVar(fn,'power2')
-                        self.powerecatsl = ReadNetCDFVar(fn,'powerecatsl')
-                        self.powerecatsr = ReadNetCDFVar(fn,'powerecatsr')
-                        self.powerslist = ReadNetCDFVar(fn,'powerslist')
-                        self.qs = ReadNetCDFVar(fn,'qs')
-                        self.ps = ReadNetCDFVar(fn,'ps')
+                        self.power = ReadNetCDFVar(fn, 'power')
+                        self.power2 = ReadNetCDFVar(fn, 'power2')
+                        self.powerecatsl = ReadNetCDFVar(fn, 'powerecatsl')
+                        self.powerecatsr = ReadNetCDFVar(fn, 'powerecatsr')
+                        self.powerslist = ReadNetCDFVar(fn, 'powerslist')
+                        self.qs = ReadNetCDFVar(fn, 'qs')
+                        self.ps = ReadNetCDFVar(fn, 'ps')
                     else:
                         print("writepq need to be set true to continue")
                         sys.exit(0)
                     for i in range(len(self.baths)):
-                        self.baths[i].noise=ReadNetCDFVar(fn,'noise'+str(i))
+                        self.baths[i].noise = ReadNetCDFVar(fn, 'noise'+str(i))
 
                 elif(ipie+1 == self.npie):
                     print("finished run")
-                    self.power =ReadNetCDFVar(fn,'power')
-                    self.power2 =ReadNetCDFVar(fn,'power2')
-                    self.powerecatsl = ReadNetCDFVar(fn,'powerecatsl')
-                    self.powerecatsr = ReadNetCDFVar(fn,'powerecatsr')
-                    self.powerslist = ReadNetCDFVar(fn,'powerslist')
-                    self.t = ReadNetCDFVar(fn,'t')[0]
+                    self.power = ReadNetCDFVar(fn, 'power')
+                    self.power2 = ReadNetCDFVar(fn, 'power2')
+                    self.powerecatsl = ReadNetCDFVar(fn, 'powerecatsl')
+                    self.powerecatsr = ReadNetCDFVar(fn, 'powerecatsr')
+                    self.powerslist = ReadNetCDFVar(fn, 'powerslist')
+                    self.t = ReadNetCDFVar(fn, 't')[0]
                     continue
                 else:
                     print("ipie error")
                     sys.exit()
             else:
                 print("new run")
-                ipie=-1  #yes,-1
+                ipie = -1  # yes,-1
                 if os.path.isfile(fnm):
                     print("reading history from previous run")
-                    self.p = ReadNetCDFVar(fnm,'p')
-                    self.q = ReadNetCDFVar(fnm,'q')
-                    qhis0 = ReadNetCDFVar(fnm,'qhis')
-                    phis0 = ReadNetCDFVar(fnm,'phis')
-                    self.t = ReadNetCDFVar(fnm,'t')[0]
+                    self.p = ReadNetCDFVar(fnm, 'p')
+                    self.q = ReadNetCDFVar(fnm, 'q')
+                    qhis0 = ReadNetCDFVar(fnm, 'qhis')
+                    phis0 = ReadNetCDFVar(fnm, 'phis')
+                    self.t = ReadNetCDFVar(fnm, 't')[0]
                     if qhis0.shape == self.qhis.shape and\
                             phis0.shape == self.phis.shape:
                         self.qhis = qhis0
                         self.phis = phis0
-                #noise generation
-                for i in range(len(self.baths)): #loop over baths
+                # noise generation
+                for i in range(len(self.baths)):  # loop over baths
                     self.baths[i].gnoi()
-                    #print N.shape(self.baths[i].noise)
-                    #stppp
-        
-                #reset qs and ps to zero
+                    # print N.shape(self.baths[i].noise)
+                    # stppp
+
+                # reset qs and ps to zero
                 self.ResetSavepq()
-        
-            #loop over md steps
-            ipie1=ipie+1
-            iss=ipie1+N.array(list(range(self.npie-ipie1)))
-            trajfile=open('trajectories'+"."+str(self.T)+"."+"run"+str(j)+'.ani', 'w')
+
+            # loop over md steps
+            ipie1 = ipie+1
+            iss = ipie1+N.array(range(self.npie-ipie1))
+            trajfile = open('trajectories'+"."+str(self.T) +
+                            "."+"run"+str(j)+'.ani', 'w')
             for i in iss:
                 print("Progress of MD")
-                for jj in tqdm(list(range(int(self.nmd/self.npie))),unit="steps",mininterval=1):
+                for jj in tqdm(range(int(self.nmd/self.npie)), unit="steps", mininterval=1):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
-                        #trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
-                        trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.etot[(self.t-1)%self.nmd])+'\n')
+                        # trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
+                        trajfile.write(str(len(
+                            self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.etot[(self.t-1) % self.nmd])+'\n')
                         for ip in range(len(self.els)):
-                            trajfile.write(str(self.els[ip])+'    '+str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   '+str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   '+str(self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
-                self.dump(i,j)
+                            trajfile.write(str(self.els[ip])+'    '+str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   '+str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   '+str(
+                                self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
+                self.dump(i, j)
             trajfile.close()
-            #power spectrum
-            power=N.copy(self.power)
-            power2=N.copy(self.power2)
-            powerecatsl=N.copy(self.powerecatsl)
-            powerecatsr=N.copy(self.powerecatsr)
-            powerslist=N.copy(self.powerslist)
+            # power spectrum
+            power = N.copy(self.power)
+            power2 = N.copy(self.power2)
+            powerecatsl = N.copy(self.powerecatsl)
+            powerecatsr = N.copy(self.powerecatsr)
+            powerslist = N.copy(self.powerslist)
             if self.cutslist is not None:
-                powercutslist=[None]*len(self.cutslist)
+                powercutslist = [None]*len(self.cutslist)
                 for layers in range(len(self.cutslist)):
                     powercutslist[layers] = N.copy(self.powercutslist[layers])
             self.GetPower()
-            power=(power*(j-self.nstart)+self.power)/float(j-self.nstart+1)
-            power2=(power2*(j-self.nstart)+self.power2)/float(j-self.nstart+1)
-            powerecatsl=(powerecatsl*(j-self.nstart)+self.powerecatsl)/float(j-self.nstart+1)
-            powerecatsr=(powerecatsr*(j-self.nstart)+self.powerecatsr)/float(j-self.nstart+1)
-            powerslist=(powerslist*(j-self.nstart)+self.powerslist)/float(j-self.nstart+1)
+            power = (power*(j-self.nstart)+self.power)/float(j-self.nstart+1)
+            power2 = (power2*(j-self.nstart)+self.power2) / \
+                float(j-self.nstart+1)
+            powerecatsl = (powerecatsl*(j-self.nstart) +
+                           self.powerecatsl)/float(j-self.nstart+1)
+            powerecatsr = (powerecatsr*(j-self.nstart) +
+                           self.powerecatsr)/float(j-self.nstart+1)
+            powerslist = (powerslist*(j-self.nstart) +
+                          self.powerslist)/float(j-self.nstart+1)
             if self.cutslist is not None:
                 for layers in range(len(self.cutslist)):
-                    powercutslist[layers] = (powercutslist[layers]*(j-self.nstart)+self.powercutslist[layers])/float(j-self.nstart+1)
-            self.power=N.copy(power)
-            self.power2=N.copy(power2)
-            powerecatsl=N.copy(self.powerecatsl)
-            powerecatsr=N.copy(self.powerecatsr)
-            powerslist=N.copy(self.powerslist)
+                    powercutslist[layers] = (
+                        powercutslist[layers]*(j-self.nstart)+self.powercutslist[layers])/float(j-self.nstart+1)
+            self.power = N.copy(power)
+            self.power2 = N.copy(power2)
+            powerecatsl = N.copy(self.powerecatsl)
+            powerecatsr = N.copy(self.powerecatsr)
+            powerslist = N.copy(self.powerslist)
             if self.cutslist is not None:
                 for layers in range(len(self.cutslist)):
                     powercutslist[layers] = N.copy(self.powercutslist[layers])
 
-            #dump again, to make sure power is all right
-            self.dump(i,j)
-            
-            #----------------------------------------------------------------
-            #heat current
-            #----------------------------------------------------------------
+            # dump again, to make sure power is all right
+            self.dump(i, j)
+
+            # ----------------------------------------------------------------
+            # heat current
+            # ----------------------------------------------------------------
             for ii in range(len(self.baths)):
-                fk = open("kappa."+str(self.T)+"."+"bath"+str(ii)+".run"+str(j)+".dat","w")
-                #write average current
-                fk.write("%i %f    %f \n"%(j,self.T,N.mean(self.baths[ii].cur)*U.curcof))
+                fk = open("kappa."+str(self.T)+"."+"bath" +
+                          str(ii)+".run"+str(j)+".dat", "w")
+                # write average current
+                fk.write("%i %f    %f \n" %
+                         (j, self.T, N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
 
-            #----------------------------------------------------------------
-            #power spectrum
-            #----------------------------------------------------------------
-            f = open("power."+str(self.T)+"."+"run"+str(j)+".dat","w")
-            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            #f.write("#energy    transmission    DoSL    DoSR\n")
+            # ----------------------------------------------------------------
+            # power spectrum
+            # ----------------------------------------------------------------
+            f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
+            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+            # f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.power)):
-                #only write out power spectrum upto 1.5max(hw)
+                # only write out power spectrum upto 1.5max(hw)
                 if self.hw is not None:
-                    if(self.power[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                    if(self.power[i, 0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n" %
+                                (self.power[i, 0], self.power[i, 1]))
                     else:
                         break
                 else:
-                    f.write("%f     %f \n"%(self.power[i,0],self.power[i,1]))
+                    f.write("%f     %f \n" %
+                            (self.power[i, 0], self.power[i, 1]))
             f.close()
-            #----------------------------------------------------------------
-            #power spectrum from velocity
-            #----------------------------------------------------------------
-            f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat","w")
+            # ----------------------------------------------------------------
+            # power spectrum from velocity
+            # ----------------------------------------------------------------
+            f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat", "w")
             for i in range(len(self.power2)):
-                #only write out power spectrum upto 1.5max(hw)
+                # only write out power spectrum upto 1.5max(hw)
                 if self.hw is not None:
-                    if(self.power2[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+                    if(self.power2[i, 0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n" %
+                                (self.power2[i, 0], self.power2[i, 1]))
                     else:
                         break
                 else:
-                    f.write("%f     %f \n"%(self.power2[i,0],self.power2[i,1]))
+                    f.write("%f     %f \n" %
+                            (self.power2[i, 0], self.power2[i, 1]))
             f.close()
-            #----------------------------------------------------------------
-            #power spectrum ecatsl
-            #----------------------------------------------------------------
-            f = open("powerecatsl."+str(self.T)+"."+"run"+str(j)+".dat","w")
-            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            #f.write("#energy    transmission    DoSL    DoSR\n")
+            # ----------------------------------------------------------------
+            # power spectrum ecatsl
+            # ----------------------------------------------------------------
+            f = open("powerecatsl."+str(self.T)+"."+"run"+str(j)+".dat", "w")
+            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+            # f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.powerecatsl)):
-                #only write out power spectrum upto 1.5max(hw)
+                # only write out power spectrum upto 1.5max(hw)
                 if self.hw is not None:
-                    if(self.powerecatsl[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.powerecatsl[i,0],self.powerecatsl[i,1]))
+                    if(self.powerecatsl[i, 0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n" %
+                                (self.powerecatsl[i, 0], self.powerecatsl[i, 1]))
                     else:
                         break
                 else:
-                    f.write("%f     %f \n"%(self.powerecatsl[i,0],self.powerecatsl[i,1]))
+                    f.write("%f     %f \n" %
+                            (self.powerecatsl[i, 0], self.powerecatsl[i, 1]))
             f.close()
-            #----------------------------------------------------------------
-            #power spectrum ecatsr
-            #----------------------------------------------------------------
-            f = open("powerecatsr."+str(self.T)+"."+"run"+str(j)+".dat","w")
-            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            #f.write("#energy    transmission    DoSL    DoSR\n")
+            # ----------------------------------------------------------------
+            # power spectrum ecatsr
+            # ----------------------------------------------------------------
+            f = open("powerecatsr."+str(self.T)+"."+"run"+str(j)+".dat", "w")
+            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+            # f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.powerecatsr)):
-                #only write out power spectrum upto 1.5max(hw)
+                # only write out power spectrum upto 1.5max(hw)
                 if self.hw is not None:
-                    if(self.powerecatsr[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.powerecatsr[i,0],self.powerecatsr[i,1]))
+                    if(self.powerecatsr[i, 0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n" %
+                                (self.powerecatsr[i, 0], self.powerecatsr[i, 1]))
                     else:
                         break
                 else:
-                    f.write("%f     %f \n"%(self.powerecatsr[i,0],self.powerecatsr[i,1]))
+                    f.write("%f     %f \n" %
+                            (self.powerecatsr[i, 0], self.powerecatsr[i, 1]))
             f.close()
-            #----------------------------------------------------------------
-            #power spectrum slist
-            #----------------------------------------------------------------
-            f = open("powerslist."+str(self.T)+"."+"run"+str(j)+".dat","w")
-            #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            #f.write("#energy    transmission    DoSL    DoSR\n")
+            # ----------------------------------------------------------------
+            # power spectrum slist
+            # ----------------------------------------------------------------
+            f = open("powerslist."+str(self.T)+"."+"run"+str(j)+".dat", "w")
+            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+            # f.write("#energy    transmission    DoSL    DoSR\n")
             for i in range(len(self.powerslist)):
-                #only write out power spectrum upto 1.5max(hw)
+                # only write out power spectrum upto 1.5max(hw)
                 if self.hw is not None:
-                    if(self.powerslist[i,0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n"%(self.powerslist[i,0],self.powerslist[i,1]))
+                    if(self.powerslist[i, 0] < 1.5*max(self.hw)):
+                        f.write("%f     %f \n" %
+                                (self.powerslist[i, 0], self.powerslist[i, 1]))
                     else:
                         break
                 else:
-                    f.write("%f     %f \n"%(self.powerslist[i,0],self.powerslist[i,1]))
+                    f.write("%f     %f \n" %
+                            (self.powerslist[i, 0], self.powerslist[i, 1]))
             f.close()
             if self.cutslist is not None:
                 for layers in range(len(self.cutslist)):
-                    #----------------------------------------------------------------
-                    #power spectrum slist
-                    #----------------------------------------------------------------
-                    f = open("powercutslist."+str(layers)+"."+str(self.T)+"."+"run"+str(j)+".dat","w")
-                    #f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-                    #f.write("#energy    transmission    DoSL    DoSR\n")
+                    # ----------------------------------------------------------------
+                    # power spectrum slist
+                    # ----------------------------------------------------------------
+                    f = open("powercutslist."+str(layers)+"." +
+                             str(self.T)+"."+"run"+str(j)+".dat", "w")
+                    # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
+                    # f.write("#energy    transmission    DoSL    DoSR\n")
                     for i in range(len(self.powercutslist[layers])):
-                        #only write out power spectrum upto 1.5max(hw)
+                        # only write out power spectrum upto 1.5max(hw)
                         if self.hw is not None:
-                            if(self.powercutslist[layers][i,0] < 1.5*max(self.hw)):
-                                f.write("%f     %f \n"%(self.powercutslist[layers][i,0],self.powercutslist[layers][i,1]))
+                            if(self.powercutslist[layers][i, 0] < 1.5*max(self.hw)):
+                                f.write("%f     %f \n" % (
+                                    self.powercutslist[layers][i, 0], self.powercutslist[layers][i, 1]))
                             else:
                                 break
                         else:
-                            f.write("%f     %f \n"%(self.powercutslist[layers][i,0],self.powercutslist[layers][i,1]))
+                            f.write("%f     %f \n" % (
+                                self.powercutslist[layers][i, 0], self.powercutslist[layers][i, 1]))
                     f.close()
             if self.rmnc:
                 if os.path.exists("MD"+str(j-1)+".nc"):
                     print("Remove MD"+str(j-1)+".nc")
                     os.remove("MD"+str(j-1)+".nc")
-                #else:
+                # else:
                 #    print("No NC file exists.")
 
-    def dump(self,ipie,id):
+    def dump(self, ipie, id):
         """
         dump md information
         """
-        outfile="MD"+str(id)+".nc"
-        NCfile = Dataset(outfile,'w','Created '+time.ctime(time.time()))
+        outfile = "MD"+str(id)+".nc"
+        NCfile = Dataset(outfile, 'w', 'Created '+time.ctime(time.time()))
         NCfile.title = 'Output from md.py'
-        NCfile.createDimension('nph',self.nph)
-        #NCfile.createDimension('na',self.na)
-        NCfile.createDimension('one',1)
-        NCfile.createDimension('two',2)
-        NCfile.createDimension('mem',self.ml)
-        NCfile.createDimension('nmd',self.nmd)
-        NCfile.createDimension('nnmd',None)
+        NCfile.createDimension('nph', self.nph)
+        # NCfile.createDimension('na',self.na)
+        NCfile.createDimension('one', 1)
+        NCfile.createDimension('two', 2)
+        NCfile.createDimension('mem', self.ml)
+        NCfile.createDimension('nmd', self.nmd)
+        NCfile.createDimension('nnmd', None)
         for i in range(len(self.baths)):
-            NCfile.createDimension('n'+str(i),self.baths[i].nc)
+            NCfile.createDimension('n'+str(i), self.baths[i].nc)
 
-        #els
-        #Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
+        # els
+        # Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
 
         if self.writepq:
-            #noise series
+            # noise series
             for i in range(len(self.baths)):
-                #NCfile.createDimension('n'+str(i),self.baths[i].nc)
-                Write2NetCDFFile(NCfile,self.baths[i].noise,'noise'+str(i),\
-                                ('nnmd','n'+str(i),),units='')
-                Write2NetCDFFile(NCfile,self.fhis[i],'fhis'+str(i),('nnmd','nph',),units='')
-            #save all the histories of p,q or not
-            Write2NetCDFFile(NCfile,self.ps,'ps',('nnmd','nph',),units='')
-            Write2NetCDFFile(NCfile,self.qs,'qs',('nnmd','nph',),units='')
-            #power spectrum
-            Write2NetCDFFile(NCfile,self.power,'power',('nnmd','two',),units='')
-            Write2NetCDFFile(NCfile,self.power2,'power2',('nnmd','two',),units='')
-            Write2NetCDFFile(NCfile,self.powerecatsl,'powerecatsl',('nnmd','two',),units='')
-            Write2NetCDFFile(NCfile,self.powerecatsr,'powerecatsr',('nnmd','two',),units='')
-            Write2NetCDFFile(NCfile,self.powerslist,'powerslist',('nnmd','two',),units='')
-        #energy
-        Write2NetCDFFile(NCfile,self.etot,'energy',('nnmd',),units='')
-        #velocity
-        Write2NetCDFFile(NCfile,self.p,'p',('nph',),units='')
-        #displacement
-        Write2NetCDFFile(NCfile,self.q,'q',('nph',),units='')
-        #current time
-        Write2NetCDFFile(NCfile,self.t,'t',('one',),units='')
-        #current segment
-        Write2NetCDFFile(NCfile,ipie,'ipie',('one',),units='')
-        #memory kernel for p
-        Write2NetCDFFile(NCfile,self.phis,'phis',('mem','nph',),units='')
-        #memory kernel for q
-        Write2NetCDFFile(NCfile,self.qhis,'qhis',('mem','nph',),units='')
+                # NCfile.createDimension('n'+str(i),self.baths[i].nc)
+                Write2NetCDFFile(NCfile, self.baths[i].noise, 'noise'+str(i),
+                                 ('nnmd', 'n'+str(i),), units='')
+                Write2NetCDFFile(
+                    NCfile, self.fhis[i], 'fhis'+str(i), ('nnmd', 'nph',), units='')
+            # save all the histories of p,q or not
+            Write2NetCDFFile(NCfile, self.ps, 'ps', ('nnmd', 'nph',), units='')
+            Write2NetCDFFile(NCfile, self.qs, 'qs', ('nnmd', 'nph',), units='')
+            # power spectrum
+            Write2NetCDFFile(NCfile, self.power, 'power',
+                             ('nnmd', 'two',), units='')
+            Write2NetCDFFile(NCfile, self.power2, 'power2',
+                             ('nnmd', 'two',), units='')
+            Write2NetCDFFile(NCfile, self.powerecatsl,
+                             'powerecatsl', ('nnmd', 'two',), units='')
+            Write2NetCDFFile(NCfile, self.powerecatsr,
+                             'powerecatsr', ('nnmd', 'two',), units='')
+            Write2NetCDFFile(NCfile, self.powerslist,
+                             'powerslist', ('nnmd', 'two',), units='')
+        # energy
+        Write2NetCDFFile(NCfile, self.etot, 'energy', ('nnmd',), units='')
+        # velocity
+        Write2NetCDFFile(NCfile, self.p, 'p', ('nph',), units='')
+        # displacement
+        Write2NetCDFFile(NCfile, self.q, 'q', ('nph',), units='')
+        # current time
+        Write2NetCDFFile(NCfile, self.t, 't', ('one',), units='')
+        # current segment
+        Write2NetCDFFile(NCfile, ipie, 'ipie', ('one',), units='')
+        # memory kernel for p
+        Write2NetCDFFile(NCfile, self.phis, 'phis', ('mem', 'nph',), units='')
+        # memory kernel for q
+        Write2NetCDFFile(NCfile, self.qhis, 'qhis', ('mem', 'nph',), units='')
 
         NCfile.close()
 
 
-#--------------------------------------------------------------------------------------
-#misc driver routines
-def Write2NetCDFFile(file,var,varLabel,dimensions,units=None,description=None):
-    #print 'Write2NetCDFFile:', varLabel, dimensions
-    tmp = file.createVariable(varLabel,'d',dimensions)
+# --------------------------------------------------------------------------------------
+# misc driver routines
+def Write2NetCDFFile(file, var, varLabel, dimensions, units=None, description=None):
+    # print 'Write2NetCDFFile:', varLabel, dimensions
+    tmp = file.createVariable(varLabel, 'd', dimensions)
     tmp[:] = var
-    if units: tmp.units = units
-    if description: tmp.description = description
+    if units:
+        tmp.units = units
+    if description:
+        tmp.description = description
 
-def ReadNetCDFVar(file,var):
-    print("ReadNetCDFFile: reading "+ var)
-    f = Dataset(file,'r')
-    vv=N.array(f.variables[var])
+
+def ReadNetCDFVar(file, var):
+    print("ReadNetCDFFile: reading " + var)
+    f = Dataset(file, 'r')
+    vv = N.array(f.variables[var])
     f.close()
     return vv
 
-def sameq(q1,q2):
+
+def sameq(q1, q2):
     if(len(q1) != len(q2)):
-        #print "sameq: qq1 and qq2 not same length"
-        return False 
+        # print "sameq: qq1 and qq2 not same length"
+        return False
     qq1 = N.array(q1)
     qq2 = N.array(q2)
     dif = qq1-qq2
-    #if the difference is less than 10e-10
-    #use the old force
+    # if the difference is less than 10e-10
+    # use the old force
     if(max(abs(dif)) < 10e-10):
         return True
     else:
         return False
 
 
-def ApplyConstraint(f,constr=None):
+def ApplyConstraint(f, constr=None):
     """
     apply constraint to the force
 
@@ -881,10 +912,11 @@ def ApplyConstraint(f,constr=None):
     """
     if constr is None:
         return f
-    nf=N.array(f)*1.0
-    constr=N.array(constr)
-    nf[constr]=0
+    nf = N.array(f)*1.0
+    constr = N.array(constr)
+    nf[constr] = 0
     return nf
+
 
 '''
 #--------------------------------------------------------------------------------------
