@@ -31,7 +31,7 @@ nstop = 5
 # time = 0.658fs #time unit
 dt = 0.25/0.658
 # number of md steps
-nmd = 2**10
+nmd = 2**12
 # initialise lammps run
 lmp = lammpsdriver(infile=lammpsinfile)
 time_start = time.time()
@@ -54,7 +54,7 @@ print("the following atoms are dynamic:\n")
 print(dynamicatoms)
 print(len(dynamicatoms))
 # if slist is not given, md will initialize it using xyz
-mdrun = md(dt, nmd, T, ecatsl=ecatsl, ecatsr=ecatsr, slist=slist, cutslist=None, syslist=None, axyz=lmp.axyz, writepq=True, rmnc=True,
+mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True, rmnc=True,
            nstart=nstart, nstop=nstop, npie=1, constr=fixatoms, nstep=100)
 # attache lammps driver to md
 mdrun.AddLMPint(lmp)
@@ -65,12 +65,22 @@ etal = (1.0/damp)*N.identity(len(ecatsl), N.float)
 etar = (1.0/damp)*N.identity(len(ecatsr), N.float)
 # atom indices that are connecting to bath
 ebl = ebath(ecatsl, Thot, mdrun.dt, mdrun.nmd,
-            wmax=1., nw=500, bias=0.0, efric=etal, classical=False, zpmotion=False)
+            wmax=1., nw=500, bias=0.0, efric=etal, classical=False)
 mdrun.AddBath(ebl)
 
 ebr = ebath(ecatsr, Tcold, mdrun.dt, mdrun.nmd,
-            wmax=1., nw=500, bias=0.0, efric=etar, classical=False, zpmotion=False)
+            wmax=1., nw=500, bias=0.0, efric=etar, classical=False)
 mdrun.AddBath(ebr)
+
+mdrun.AddHbath(ecatsl)
+mdrun.AddHbath(ecatsr)
+
+atomlist=[]
+atomlist.append(ecatsl)
+atomlist.append(slist)
+atomlist.append(ecatsr)
+
+mdrun.AddPowerSection(atomlist)
 # MD
 mdrun.Run()
 # close lammps instant
@@ -78,6 +88,4 @@ lmp.quit()
 CalHF()
 CalTC(delta=delta, dlist=0)
 time_end = time.time()
-print('time cost', time_end-time_start, 's')
-
-# ----------------
+print('time cost', time_end-time_start, 's.')

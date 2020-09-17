@@ -79,11 +79,13 @@ class lammpsdriver(lammps):
     def newx(self, q):
         for i in range(3*self.number):
             self.newxyz[i] = self.xyz[i] + self.conv[i] * q[i]
+        # newxyz type 
+        #self.newxyz = self.xyz + N.dot(self.conv.T, q)
         return self.newxyz
 
     def absforce(self, q):
         self.scatter_atoms("x", 1, 3, self.newx(q))
-        self.command("run 1")
+        self.command("run 0")
         return self.para*self.conv*N.array(self.gather_atoms("f", 1, 3))
 
     def initforce(self):

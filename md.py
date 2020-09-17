@@ -59,7 +59,7 @@ class md:
         rmnc        Remove NC files after calculation
     """
 
-    def __init__(self, dt, nmd, T, ecatsl, ecatsr, slist, cutslist=None, syslist=None, axyz=None, harmonic=False, dyn=None, savepq=True, writepq=True, rmnc=False, nstart=0, nstop=1, npie=8, constr=None, nstep=100, md2ang=0.06466):
+    def __init__(self, dt, nmd, T, syslist=None, axyz=None, harmonic=False, dyn=None, savepq=True, writepq=True, rmnc=False, nstart=0, nstop=1, npie=8, constr=None, nstep=100, md2ang=0.06466):
         # drivers
         self.sint = None  # siesta instance
         self.brennerrun = None
@@ -72,20 +72,9 @@ class md:
         self.harmonic = harmonic
         self.T = T
         self.npie = npie
-        self.slist = slist
-        self.cutslist = cutslist
-        self.ecatsl = ecatsl
-        self.ecatsr = ecatsr
         self.power = N.zeros((self.nmd, 2))
-        self.power2 = N.zeros((self.nmd, 2))
-        self.powerecatsl = N.empty((self.nmd, 2))
-        self.powerecatsr = N.empty((self.nmd, 2))
-        self.powerslist = N.empty((self.nmd, 2))
         self.writepq = writepq
         self.rmnc = rmnc
-        if self.cutslist is not None:
-            self.cutslist = cutslist
-            self.powercutslist = N.empty((len(self.cutslist), self.nmd, 2))
         # var: xyz,nta,els
         self.SetXyz(axyz)
         # var: syslist,na,nph
@@ -126,6 +115,12 @@ class md:
         self.baths = []
         self.fhis = []
         self.fbaths = []
+
+        # list of atoms to calculate heat current
+        self.hbaths = []
+        self.hbathscur = []
+        self.hfhis = []
+        self.hfbaths = []
 
         self.etot = N.zeros(nmd)
 
@@ -200,6 +195,16 @@ class md:
         # force history
         self.fhis.append(N.zeros((self.nmd, self.nph)))
 
+    def AddHbath(self, bath):
+        self.hbaths.append(bath)
+        self.hfbaths.append(N.zeros(self.nph))
+        self.hfhis.append(N.zeros((self.nmd, self.nph)))
+        self.hbathscur.append(N.zeros(self.nmd))
+
+    def AddPowerSection(self, atomlist):
+        self.atomlist = atomlist
+        self.poweratomlist = N.empty((len(self.atomlist), self.nmd, 2))
+    
     def SetT(self, T):
         self.T = T
 
@@ -334,16 +339,10 @@ class md:
             sys.exit()
         print("md.GetPower: generate power spectrum from trajectories.")
         self.power = powerspec(self.qs, self.dt, self.nmd)
-        self.power2 = powerspec2(self.ps, self.dt, self.nmd)
-        self.powerecatsl = powerspec(
-            self.qs[:, self.ecatsl], self.dt, self.nmd)
-        self.powerecatsr = powerspec(
-            self.qs[:, self.ecatsr], self.dt, self.nmd)
-        self.powerslist = powerspec(self.qs[:, self.slist], self.dt, self.nmd)
-        if self.cutslist is not None:
-            for layers in range(len(self.cutslist)):
-                self.powercutslist[layers] = powerspec(
-                    self.qs[:, self.cutslist[layers]], self.dt, self.nmd)
+        if self.atomlist is not None:
+            for layers in range(len(self.atomlist)):
+                self.poweratomlist[layers] = powerspec(
+                    self.qs[:, self.atomlist[layers]], self.dt, self.nmd)
 
     def vv(self, id):
         """
@@ -374,6 +373,12 @@ class md:
             # self.baths[i].cur=N.append(self.baths[i].cur,mm(self.fbaths[i],p))
             self.baths[i].cur[t % self.nmd] = mm(self.fbaths[i], p)
             self.fhis[i][t % self.nmd] = self.fbaths[i]
+
+        if self.hbaths is not None:
+        # evaluate current from select atoms
+            for i in range(len(self.hbaths)):
+                self.hbathscur[i][t % self.nmd] = mm(self.hfbaths[i], p)
+                self.hfhis[i][t % self.nmd] = self.hfbaths[i]
 
         # calculate velocity at next time
         f = self.force(t, pthalf, qtt, 1)
@@ -410,6 +415,11 @@ class md:
         for i in range(len(self.baths)):
             self.fbaths[i] = self.baths[i].bforce(it, tphis, tqhis)
             pf = pf + self.fbaths[i]
+        if self.hbaths is not None:
+            for i in range(len(self.hbaths)):
+                # Now only work with LAMMPS potential driver.
+                allpf = pf + self.lammpsrun.f0
+                self.hfbaths[i][self.hbaths[i][0]:self.hbaths[i][-1]]=allpf[self.hbaths[i][0]:self.hbaths[i][-1]]
 
         return pf
 
@@ -647,36 +657,20 @@ class md:
             trajfile.close()
             # power spectrum
             power = N.copy(self.power)
-            power2 = N.copy(self.power2)
-            powerecatsl = N.copy(self.powerecatsl)
-            powerecatsr = N.copy(self.powerecatsr)
-            powerslist = N.copy(self.powerslist)
-            if self.cutslist is not None:
-                powercutslist = [None]*len(self.cutslist)
-                for layers in range(len(self.cutslist)):
-                    powercutslist[layers] = N.copy(self.powercutslist[layers])
+            if self.atomlist is not None:
+                poweratomlist = [None]*len(self.atomlist)
+                for layers in range(len(self.atomlist)):
+                    poweratomlist[layers] = N.copy(self.poweratomlist[layers])
             self.GetPower()
             power = (power*(j-self.nstart)+self.power)/float(j-self.nstart+1)
-            power2 = (power2*(j-self.nstart)+self.power2) / \
-                float(j-self.nstart+1)
-            powerecatsl = (powerecatsl*(j-self.nstart) +
-                           self.powerecatsl)/float(j-self.nstart+1)
-            powerecatsr = (powerecatsr*(j-self.nstart) +
-                           self.powerecatsr)/float(j-self.nstart+1)
-            powerslist = (powerslist*(j-self.nstart) +
-                          self.powerslist)/float(j-self.nstart+1)
-            if self.cutslist is not None:
-                for layers in range(len(self.cutslist)):
-                    powercutslist[layers] = (
-                        powercutslist[layers]*(j-self.nstart)+self.powercutslist[layers])/float(j-self.nstart+1)
+            if self.atomlist is not None:
+                for layers in range(len(self.atomlist)):
+                    poweratomlist[layers] = (
+                        poweratomlist[layers]*(j-self.nstart)+self.poweratomlist[layers])/float(j-self.nstart+1)
             self.power = N.copy(power)
-            self.power2 = N.copy(power2)
-            powerecatsl = N.copy(self.powerecatsl)
-            powerecatsr = N.copy(self.powerecatsr)
-            powerslist = N.copy(self.powerslist)
-            if self.cutslist is not None:
-                for layers in range(len(self.cutslist)):
-                    powercutslist[layers] = N.copy(self.powercutslist[layers])
+            if self.atomlist is not None:
+                for layers in range(len(self.atomlist)):
+                    poweratomlist[layers] = N.copy(self.poweratomlist[layers])
 
             # dump again, to make sure power is all right
             self.dump(i, j)
@@ -691,6 +685,14 @@ class md:
                 fk.write("%i %f    %f \n" %
                          (j, self.T, N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
+            if self.hbaths is not None:
+                for ii in range(len(self.hbaths)):
+                    fk = open("kappa2."+str(self.T)+"."+"bath" +
+                              str(ii)+".run"+str(j)+".dat", "w")
+                    # write average current
+                    fk.write("%i %f    %f \n" %
+                             (j, self.T, N.mean(self.hbathscur)*U.curcof))
+                    fk.close()
 
             # ----------------------------------------------------------------
             # power spectrum
@@ -710,96 +712,26 @@ class md:
                     f.write("%f     %f \n" %
                             (self.power[i, 0], self.power[i, 1]))
             f.close()
-            # ----------------------------------------------------------------
-            # power spectrum from velocity
-            # ----------------------------------------------------------------
-            f = open("power2."+str(self.T)+"."+"run"+str(j)+".dat", "w")
-            for i in range(len(self.power2)):
-                # only write out power spectrum upto 1.5max(hw)
-                if self.hw is not None:
-                    if(self.power2[i, 0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n" %
-                                (self.power2[i, 0], self.power2[i, 1]))
-                    else:
-                        break
-                else:
-                    f.write("%f     %f \n" %
-                            (self.power2[i, 0], self.power2[i, 1]))
-            f.close()
-            # ----------------------------------------------------------------
-            # power spectrum ecatsl
-            # ----------------------------------------------------------------
-            f = open("powerecatsl."+str(self.T)+"."+"run"+str(j)+".dat", "w")
-            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            # f.write("#energy    transmission    DoSL    DoSR\n")
-            for i in range(len(self.powerecatsl)):
-                # only write out power spectrum upto 1.5max(hw)
-                if self.hw is not None:
-                    if(self.powerecatsl[i, 0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n" %
-                                (self.powerecatsl[i, 0], self.powerecatsl[i, 1]))
-                    else:
-                        break
-                else:
-                    f.write("%f     %f \n" %
-                            (self.powerecatsl[i, 0], self.powerecatsl[i, 1]))
-            f.close()
-            # ----------------------------------------------------------------
-            # power spectrum ecatsr
-            # ----------------------------------------------------------------
-            f = open("powerecatsr."+str(self.T)+"."+"run"+str(j)+".dat", "w")
-            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            # f.write("#energy    transmission    DoSL    DoSR\n")
-            for i in range(len(self.powerecatsr)):
-                # only write out power spectrum upto 1.5max(hw)
-                if self.hw is not None:
-                    if(self.powerecatsr[i, 0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n" %
-                                (self.powerecatsr[i, 0], self.powerecatsr[i, 1]))
-                    else:
-                        break
-                else:
-                    f.write("%f     %f \n" %
-                            (self.powerecatsr[i, 0], self.powerecatsr[i, 1]))
-            f.close()
-            # ----------------------------------------------------------------
-            # power spectrum slist
-            # ----------------------------------------------------------------
-            f = open("powerslist."+str(self.T)+"."+"run"+str(j)+".dat", "w")
-            # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
-            # f.write("#energy    transmission    DoSL    DoSR\n")
-            for i in range(len(self.powerslist)):
-                # only write out power spectrum upto 1.5max(hw)
-                if self.hw is not None:
-                    if(self.powerslist[i, 0] < 1.5*max(self.hw)):
-                        f.write("%f     %f \n" %
-                                (self.powerslist[i, 0], self.powerslist[i, 1]))
-                    else:
-                        break
-                else:
-                    f.write("%f     %f \n" %
-                            (self.powerslist[i, 0], self.powerslist[i, 1]))
-            f.close()
-            if self.cutslist is not None:
-                for layers in range(len(self.cutslist)):
+            if self.atomlist is not None:
+                for layers in range(len(self.atomlist)):
                     # ----------------------------------------------------------------
-                    # power spectrum slist
+                    # power spectrum atomlist
                     # ----------------------------------------------------------------
-                    f = open("powercutslist."+str(layers)+"." +
+                    f = open("poweratomlist."+str(layers)+"." +
                              str(self.T)+"."+"run"+str(j)+".dat", "w")
                     # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
                     # f.write("#energy    transmission    DoSL    DoSR\n")
-                    for i in range(len(self.powercutslist[layers])):
+                    for i in range(len(self.poweratomlist[layers])):
                         # only write out power spectrum upto 1.5max(hw)
                         if self.hw is not None:
-                            if(self.powercutslist[layers][i, 0] < 1.5*max(self.hw)):
+                            if(self.poweratomlist[layers][i, 0] < 1.5*max(self.hw)):
                                 f.write("%f     %f \n" % (
-                                    self.powercutslist[layers][i, 0], self.powercutslist[layers][i, 1]))
+                                    self.poweratomlist[layers][i, 0], self.poweratomlist[layers][i, 1]))
                             else:
                                 break
                         else:
                             f.write("%f     %f \n" % (
-                                self.powercutslist[layers][i, 0], self.powercutslist[layers][i, 1]))
+                                self.poweratomlist[layers][i, 0], self.poweratomlist[layers][i, 1]))
                     f.close()
             if self.rmnc:
                 if os.path.exists("MD"+str(j-1)+".nc"):
@@ -822,6 +754,9 @@ class md:
         NCfile.createDimension('mem', self.ml)
         NCfile.createDimension('nmd', self.nmd)
         NCfile.createDimension('nnmd', None)
+        if self.atomlist is not None:
+            NCfile.createDimension('atomlist', len(self.atomlist))
+
         for i in range(len(self.baths)):
             NCfile.createDimension('n'+str(i), self.baths[i].nc)
 
@@ -842,14 +777,9 @@ class md:
             # power spectrum
             Write2NetCDFFile(NCfile, self.power, 'power',
                              ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.power2, 'power2',
-                             ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.powerecatsl,
-                             'powerecatsl', ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.powerecatsr,
-                             'powerecatsr', ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.powerslist,
-                             'powerslist', ('nnmd', 'two',), units='')
+            Write2NetCDFFile(NCfile, self.poweratomlist,
+                             'poweratomlist', ('atomlist','nnmd', 'two'), units='')
+
         # energy
         Write2NetCDFFile(NCfile, self.etot, 'energy', ('nnmd',), units='')
         # velocity
