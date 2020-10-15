@@ -1,18 +1,15 @@
-import sys
-import time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*
 import os
+import sys
+
 import numpy as N
-from numpy import linalg as LA
-#import Scientific.IO.NetCDF as nc
 from netCDF4 import Dataset
+from numpy import linalg as LA
 from tqdm import tqdm
 
 import units as U
-from matrix import *
-from functions import *
-from myfft import *
-from noise import *
-from spectrum import *
+from functions import bose, chkShape, mdot, mm, powerspec, rpadleft, symmetrize
 
 """
 #TODO:
@@ -116,12 +113,6 @@ class md:
         self.fhis = []
         self.fbaths = []
 
-        # list of atoms to calculate heat current
-        self.hbaths = []
-        self.hbathscur = []
-        self.hfhis = []
-        self.hfbaths = []
-
         self.etot = N.zeros(nmd)
 
         # vars: dyn,hw,U,nph
@@ -129,8 +120,7 @@ class md:
 
         # var: ps,qs,power,savepq
         self.ResetSavepq(savepq)
-# --------------------------------------------------------------
-# Add tracking of atomic trajectories by Li Gen.
+    # Add tracking of atomic trajectories
         self.md2ang = md2ang
         self.mass = []
         self.get_atommass()
@@ -143,7 +133,6 @@ class md:
             for key, value in list(U.AtomicMassTable.items()):
                 if atomsname == key:
                     self.mass.append(value)
-# --------------------------------------------------------------
 
     def info(self):
         print("--------------------------------------------\n")
@@ -195,16 +184,10 @@ class md:
         # force history
         self.fhis.append(N.zeros((self.nmd, self.nph)))
 
-    def AddHbath(self, bath):
-        self.hbaths.append(bath)
-        self.hfbaths.append(N.zeros(self.nph))
-        self.hfhis.append(N.zeros((self.nmd, self.nph)))
-        self.hbathscur.append(N.zeros(self.nmd))
-
     def AddPowerSection(self, atomlist):
         self.atomlist = atomlist
         self.poweratomlist = N.empty((len(self.atomlist), self.nmd, 2))
-    
+
     def SetT(self, T):
         self.T = T
 
@@ -374,12 +357,6 @@ class md:
             self.baths[i].cur[t % self.nmd] = mm(self.fbaths[i], p)
             self.fhis[i][t % self.nmd] = self.fbaths[i]
 
-        if self.hbaths is not None:
-        # evaluate current from select atoms
-            for i in range(len(self.hbaths)):
-                self.hbathscur[i][t % self.nmd] = mm(self.hfbaths[i], p)
-                self.hfhis[i][t % self.nmd] = self.hfbaths[i]
-
         # calculate velocity at next time
         f = self.force(t, pthalf, qtt, 1)
         ptt1 = pthalf+self.dt*f/2.0
@@ -415,12 +392,6 @@ class md:
         for i in range(len(self.baths)):
             self.fbaths[i] = self.baths[i].bforce(it, tphis, tqhis)
             pf = pf + self.fbaths[i]
-        if self.hbaths is not None:
-            for i in range(len(self.hbaths)):
-                # Now only work with LAMMPS potential driver.
-                allpf = pf + self.lammpsrun.f0
-                self.hfbaths[i][self.hbaths[i][0]:self.hbaths[i][-1]]=allpf[self.hbaths[i][0]:self.hbaths[i][-1]]
-
         return pf
 
     # def potforce(self,q):
@@ -450,7 +421,7 @@ class md:
     #        self.q0=q
     #        self.f0=f
     #        return f
-#
+    #
     # def potforce(self,q):
     #    """
     #    Tue's version including brenner
@@ -644,7 +615,7 @@ class md:
                             "."+"run"+str(j)+'.ani', 'w')
             for i in iss:
                 print("Progress of MD")
-                for jj in tqdm(range(int(self.nmd/self.npie)), unit="steps", mininterval=1):
+                for _ in tqdm(range(int(self.nmd/self.npie)), unit="steps", mininterval=1):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         # trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
@@ -675,9 +646,7 @@ class md:
             # dump again, to make sure power is all right
             self.dump(i, j)
 
-            # ----------------------------------------------------------------
             # heat current
-            # ----------------------------------------------------------------
             for ii in range(len(self.baths)):
                 fk = open("kappa."+str(self.T)+"."+"bath" +
                           str(ii)+".run"+str(j)+".dat", "w")
@@ -685,18 +654,8 @@ class md:
                 fk.write("%i %f    %f \n" %
                          (j, self.T, N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
-            if self.hbaths is not None:
-                for ii in range(len(self.hbaths)):
-                    fk = open("kappa2."+str(self.T)+"."+"bath" +
-                              str(ii)+".run"+str(j)+".dat", "w")
-                    # write average current
-                    fk.write("%i %f    %f \n" %
-                             (j, self.T, N.mean(self.hbathscur)*U.curcof))
-                    fk.close()
 
-            # ----------------------------------------------------------------
             # power spectrum
-            # ----------------------------------------------------------------
             f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
             # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
             # f.write("#energy    transmission    DoSL    DoSR\n")
@@ -714,9 +673,7 @@ class md:
             f.close()
             if self.atomlist is not None:
                 for layers in range(len(self.atomlist)):
-                    # ----------------------------------------------------------------
                     # power spectrum atomlist
-                    # ----------------------------------------------------------------
                     f = open("poweratomlist."+str(layers)+"." +
                              str(self.T)+"."+"run"+str(j)+".dat", "w")
                     # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
@@ -778,7 +735,7 @@ class md:
             Write2NetCDFFile(NCfile, self.power, 'power',
                              ('nnmd', 'two',), units='')
             Write2NetCDFFile(NCfile, self.poweratomlist,
-                             'poweratomlist', ('atomlist','nnmd', 'two'), units='')
+                             'poweratomlist', ('atomlist', 'nnmd', 'two'), units='')
 
         # energy
         Write2NetCDFFile(NCfile, self.etot, 'energy', ('nnmd',), units='')
@@ -798,11 +755,10 @@ class md:
         NCfile.close()
 
 
-# --------------------------------------------------------------------------------------
 # misc driver routines
 def Write2NetCDFFile(file, var, varLabel, dimensions, units=None, description=None):
     # print 'Write2NetCDFFile:', varLabel, dimensions
-    tmp = file.createVariable(varLabel, 'd', dimensions)
+    tmp = file.createVariable(varLabel, 'd', dimensions, zlib=True)
     tmp[:] = var
     if units:
         tmp.units = units
@@ -848,89 +804,78 @@ def ApplyConstraint(f, constr=None):
     return nf
 
 
-'''
-#--------------------------------------------------------------------------------------
-#testing
-#
-#--------------------------------------------------------------------------------------
+if __name__ == "__main__":
+    import time
 
-if __name__=="__main__":
-    #import matplotlib.pyplot as PP
-#--------------------------------------------------------------------------------------
-    print "testing md - begin"
-    test = md([[0,0,0],[0,0,1],[0,0,-1]],[0],0.5,2**16,1.,1.,1.)
-    print md.__doc__
-    print "number of degrees of freedome: ", test.nph
-    print "number of atoms: ", test.na
+    from baths import ebath
+    from functions import calHF, calTC
+    from lammpsdriver import lammpsdriver
+    from md import md
 
-    #set dynamical matrix
-    a = N.diag(1.+N.zeros(3))
-    test.setDyn(a)
-    print test.dyn
+    lammpsinfile = [
+        #"log none",
+        "units metal ",
+        "dimension 3 ",
+        "boundary f p p",
+        "atom_style full",
+        "read_data structure.data",
+        "pair_style rebo ",
+        "pair_coeff * * CH.rebo C H",
+        "min_style cg",
+        "minimize 1e-25 1e-25 5000 10000",
+    ]
+    # temperature
+    T = 300
+    delta = 0.2
+    nstart = 0
+    nstop = 5
+    # time = 0.658fs #time unit
+    dt = 0.25/0.658
+    # number of md steps
+    nmd = 2**12
+    # initialise lammps run
+    lmp = lammpsdriver(infile=lammpsinfile)
+    time_start = time.time()
 
-    #set baths
-    test.setEmat(efric=a,exim=a,exip=a)
-    print test.ebath
-    test.setPhbath(Tl=300.,gammal=[[[0.1]],[[0.1]],[[0.1]]],wll=[0.0,0.1,0.2],ll=[1],Tr=300.,gammar=[[[0.1]],[[0.1]],[[0.1]]],wlr=[0.0,0.1,0.2],lr=[1])
-    print test.lbath
-    print test.rbath
+    print("initialise md")
+    fixatoms = [range(0*3, (19+1)*3), range(181*3, (200+1)*3)]
 
-    if test.ebath:
-        print "generating electron noise"
-        test.eno =test.genoi()
-        print test.eno.shape
-        print N.mean(test.eno,0)
-        PP.plot(test.eno[:,0])
-        PP.show()
-    if test.lbath:
-        print "generating left phonon noise"
-        test.phnol =test.glnoi()
-        print test.phnol.shape
-        print N.mean(test.phnol,0)
-        PP.plot(test.phnol[:,0])
-        PP.show()
-    if test.rbath:
-        print "generating right phonon noise"
-        test.phnor=test.grnoi()
-        print test.phnor.shape
-        print N.mean(test.phnor,0)
-        PP.plot(test.phnor[:,0])
-        PP.show()
+    # print(("constraint:",constraint))
+    # Molecular Junction atom indices
+    slist = list(range(70*3, (130+1)*3))
+    cutslist = [list(range(70*3, (89+1)*3)),
+                list(range(90*3, (109+1)*3)), list(range(110*3, (130+1)*3))]
+    # atom indices that are connecting to debyge bath
+    ecatsl = list(range(20*3, (69+1)*3))
+    ecatsr = list(range(131*3, (180+1)*3))
+    dynamicatoms = slist+ecatsl+ecatsr
+    dynamicatoms.sort()
+    print("the following atoms are dynamic:\n")
+    print(dynamicatoms)
+    print(len(dynamicatoms))
+    # if slist is not given, md will initialize it using xyz
+    mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True, rmnc=False,
+               nstart=nstart, nstop=nstop, npie=1, constr=fixatoms, nstep=100)
+    # attache lammps driver to md
+    mdrun.AddLMPint(lmp)
+    # unit in 0.658211814201041 fs
+    damp = 100/0.658211814201041
 
-    print "testing md - end"
+    etal = (1.0/damp)*N.identity(len(ecatsl), N.float)
+    etar = (1.0/damp)*N.identity(len(ecatsr), N.float)
+    # atom indices that are connecting to bath
+    ebl = ebath(ecatsl, T*(1+delta/2), mdrun.dt, mdrun.nmd,
+                wmax=1., nw=500, bias=0.0, efric=etal, classical=False, zpmotion=True)
+    mdrun.AddBath(ebl)
+    ebr = ebath(ecatsr, T*(1-delta/2), mdrun.dt, mdrun.nmd,
+                wmax=1., nw=500, bias=0.0, efric=etar, classical=False, zpmotion=True)
+    mdrun.AddBath(ebr)
 
-#--------------------------------------------------------------------------------------
-    print "initial conditions - begin"
-    dis,vel=test.initialise()
-    print dis
-    print vel
-    print "initial conditions - end"
-#--------------------------------------------------------------------------------------
-    print "testing vargau - begin"
-    a = N.array([[1.,0.1,0.3],[0.1,2.,3.],[1.,2.,3.]])
-    aa = a+dagger(a)
-    print aa
-    eval,evec = LA.eigh(aa)  #
-    #column evec[:,i] corresponds to eval[i]
-    print eval
-    print evec
-
-    aa = vargau(eval,evec)
-    print aa
-    print "testing vargau - end"
-
-#--------------------------------------------------------------------------------------
-    print "testing nonequ - begin"
-    x0 = -0.01*N.arange(100)
-    x00 = x0[::-1]  #reverse of an array
-    x = N.concatenate((x00[:-1],-x0[1:]),axis=0)
-    print "x is:", x
-    T = 0.0
-    y = [nonequp(xi,1.0,T)+nonequm(xi,1.0,T) for xi in x]
-    PP.plot(x,y)
-    print "y=nonequp()+nonequm()"
-    print "At T=0, it should be a symmetric linear curve"
-    PP.show()
-    print "testing nonequ - end"
-#--------------------------------------------------------------------------------------
-'''
+    atomlist = [ecatsl, slist, ecatsr]
+    mdrun.AddPowerSection(atomlist)
+    mdrun.Run()
+    lmp.quit()
+    calHF()
+    calTC(delta=delta, dlist=0)
+    time_end = time.time()
+    print('time cost', time_end-time_start, 's.')

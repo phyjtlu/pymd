@@ -1,9 +1,7 @@
-#!/applications/mbrsoft/bin/python
-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*
 import sys
 import numpy as N
-import numpy.fft as NFFT
-
 
 class myfft:
     '''
@@ -30,7 +28,7 @@ class myfft:
             sys.exit(0)
         else:
             nor = 2.*N.pi/self.dw
-            b = NFFT.ifft(a)
+            b = N.fft.ifft(a)
             return nor*b
 
     def iFourier1D(self, a):
@@ -49,7 +47,7 @@ class myfft:
             sys.exit(0)
         else:
             nor = self.dw/2/N.pi
-            b = NFFT.fft(a)
+            b = N.fft.fft(a)
             return nor*b
 
 
