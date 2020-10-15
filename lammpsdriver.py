@@ -1,17 +1,12 @@
 # LAMMPS driver for Langevin molecular dynamics
 # Adapted from LAMMPS python wraper
-# By Li Gen
 
-from lammps import lammps
 import sys
+
 import numpy as N
+from lammps import lammps
 
-# <<<<<<< master
-# =======
-# atomic table and periodic table from units.py
-from units import PeriodicTable
-from units import AtomicMassTable
-
+import units as U
 args = "-screen none"
 
 
@@ -19,7 +14,7 @@ def get_atomname(mass):
     """
     get the element name from its atomic mass by checking the dictionary
     """
-    for key, value in list(AtomicMassTable.items()):
+    for key, value in list(U.AtomicMassTable.items()):
         if abs(mass-value) < 0.01:
             return key
 
@@ -79,7 +74,7 @@ class lammpsdriver(lammps):
     def newx(self, q):
         for i in range(3*self.number):
             self.newxyz[i] = self.xyz[i] + self.conv[i] * q[i]
-        # newxyz type 
+        # newxyz type
         #self.newxyz = self.xyz + N.dot(self.conv.T, q)
         return self.newxyz
 

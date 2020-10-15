@@ -1,6 +1,55 @@
+import glob
 import sys
+
 import numpy as N
+
 import units as U
+
+
+class myfft:
+    def __init__(self, dt, n):
+        self.dt = dt
+        self.N = n
+        self.dw = 2*N.pi/dt/n
+
+    def Fourier1D(self, a):
+        """ 
+        1D Fourier transform from t to w using our definition:
+        f(w) = int f(t) e^Iwt dt
+        In discrete form, it's
+        f(j) = dt sum_{i=0}^{N-1} f(i) e^(I 2pi i j/N).
+        N is length of the data. 
+        domega/2/pi = 1/N/dt
+        This corresponds to the inverse FFT in numpy:
+            numpy.fft.ifft(a)*2*pi/domega
+        """
+        if(len(a) != self.N):
+            print("MyFFT.Fourier1D: array length error!")
+            sys.exit(0)
+        else:
+            nor = 2.*N.pi/self.dw
+            b = N.fft.ifft(a)
+            return nor*b
+
+    def iFourier1D(self, a):
+        """ 
+        1D Fourier transform from w to t using our definition:
+        f(t) = int f(w) e^-Iwt dw/2/pi
+        In discrete form, it's
+        f(i) = dw/2/pi sum_{j=0}^{N-1} f(j) e^(-I 2pi i j/N).
+        N is length of the data. 
+        domega/2/pi = 1/N/dt
+        This corresponds to the FFT in numpy:
+            numpy.fft.fft(a)*domega/2/pi
+        """
+        if(len(a) != self.N):
+            print("MyFFT.iFourier1D: array length error!")
+            sys.exit(0)
+        else:
+            nor = self.dw/2/N.pi
+            b = N.fft.fft(a)
+            return nor*b
+
 
 N.seterr(over="ignore")
 
@@ -107,3 +156,155 @@ def mm(* args):
     for ii in range(1, len(args)):
         tmp = N.dot(tmp, args[ii])
     return tmp
+
+
+def chkShape(a):
+    """
+    check if a is a n by n matrix, if yes return n
+    """
+    aa = N.array(a)
+    ash = N.shape(aa)
+    if(ash[0] == ash[1]):
+        return ash[0]
+    else:
+        print("The matrix should be a n by n matrix")
+        sys.exit(0)
+
+
+def symmetrize(a):
+    aa = N.array(a)
+    return 0.5*(aa+N.transpose(aa))
+
+
+def antisymmetrize(a):
+    aa = N.array(a)
+    return 0.5*(aa-N.transpose(aa))
+
+
+def dagger(a):
+    aa = N.array(a)
+    ash = N.shape(aa)
+    if(ash[0] != ash[1]):
+        print("Not sqaure matrix")
+        sys.exit(0)
+    return N.transpose(N.conjugate(aa))
+
+
+def hermitianize(a):
+    aa = N.array(a)
+    return 0.5*(aa+dagger(aa))
+
+
+def mdot(* args):
+    # dot product with arbitrary number of arguments
+    tmp = N.identity(len(args[0]))
+    for ii in range(len(args)):
+        tmp = N.dot(tmp, args[ii])
+    return tmp
+
+
+def powerspec(qs, dt, nmd):
+    """
+    qs      list of trajectories, shape(nmd,nph)
+    dt      time step of MD simulation
+    nmd     number of MD steps
+    """
+    qst = N.transpose(N.array(qs))
+    nmd2 = qst.shape[1]
+    if nmd != nmd2:
+        print("power: qs shape error!")
+        sys.exit()
+    dw = 2.*N.pi/dt/nmd
+
+    fti = myfft(dt, nmd)
+    qsw = N.array([fti.Fourier1D(a) for a in qst])
+    qsw = N.real(N.transpose(qsw*N.conjugate(qsw)))
+    dos = N.array([[i*dw, (dw*i)**2*N.sum(qsw[i])/dt/nmd] for i in range(nmd)])
+    return dos
+
+
+def powerspec2(ps, dt, nmd):
+    """
+    ps      list of trajectories, shape(nmd,nph)
+    dt      time step of MD simulation
+    nmd     number of MD steps
+    """
+    pst = N.transpose(N.array(ps))
+    nmd2 = pst.shape[1]
+    if nmd != nmd2:
+        print("power: ps shape error!")
+        sys.exit()
+    dw = 2.*N.pi/dt/nmd
+
+    fti = myfft(dt, nmd)
+    psw = N.array([fti.Fourier1D(a) for a in pst])
+    psw = N.real(N.transpose(psw*N.conjugate(psw)))
+    dos2 = N.array([[i*dw, N.sum(psw[i])/dt/nmd] for i in range(nmd)])
+    return dos2
+
+
+def calHF(dlist=1):
+    # calculate average heat flux
+    print("Calculate heat flux.")
+    # temperture=temp
+    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
+        with open(filename, 'r') as f:
+            for line in f:
+                temperture = float(line.split()[1])
+
+    dlist = list(range(dlist))
+    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
+    kb = N.empty([2, times])
+
+    for i in range(2):
+        for j in range(times):
+            kappafile = "./kappa." + \
+                str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
+            for files in glob.glob(kappafile):
+                with open(files, 'r') as f:
+                    for line in f:
+                        kb[i][j] = line.split()[2]
+#                        temperture=float(line.split()[1])
+    oldkb = N.delete(kb, dlist, axis=1)
+    balancekb = N.delete(kb, dlist, axis=1)
+    for i in range(balancekb.shape[0]):
+        for j in range(balancekb.shape[1]):
+            balancekb[i][j] = N.mean(oldkb[i][0:j+1])
+
+    heatflux = (balancekb[0]-balancekb[1])/2
+
+    with open('heatflux.'+str(int(temperture))+'.dat', 'w') as f:
+        f.write("Temperture\t"+str(temperture)+"\n"+"Bath0\t" +
+                str(balancekb[0])+"\n"+"Bath1\t"+str(balancekb[1])+"\n"+"HeatFlux\t"+str(heatflux)+"\n"+"\n")
+
+
+def calTC(delta, dlist=0):
+    # calculate thermal conductance
+    print("Calculate thermal conductance.")
+    delta = delta
+    # temperture=temp
+    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
+        with open(filename, 'r') as f:
+            for line in f:
+                temperture = float(line.split()[1])
+    dlist = list(range(dlist))
+    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
+    kb = N.empty([2, times])
+
+    for i in range(2):
+        for j in range(times):
+            kappafile = "./kappa." + \
+                str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
+            for files in glob.glob(kappafile):
+                with open(files, 'r') as f:
+                    for line in f:
+                        kb[i][j] = line.split()[2]
+#                        temperture=float(line.split()[1])
+    kappa = (kb[0]-kb[1])/2/(delta*temperture)
+    kappa = N.delete(kappa, dlist)
+    # for i in range(len(kappa)):
+    #    kappa[i]=N.mean(kappa[0:i+1])
+
+    with open('thermalconductance.'+str(int(temperture))+'.dat', 'w') as f:
+        f.write("Temperture\t"+str(temperture)+"\n"+"ThermalConductance\t"+str(kappa)+"\n" +
+                "Mean\t"+str(N.mean(kappa))+"\n"+"StandardDeviation\t"+str(N.std(kappa))+"\n")
