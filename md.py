@@ -621,7 +621,7 @@ class md:
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         # trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
                         trajfile.write(str(len(
-                            self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.etot[(self.t-1) % self.nmd])+'\n')
+                            self.els))+'\n'+str(self.t-1)+'\n')
                         for ip in range(len(self.els)):
                             trajfile.write(str(self.els[ip])+'    '+str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   '+str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   '+str(
                                 self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
@@ -809,7 +809,7 @@ if __name__ == "__main__":
     import time
 
     from baths import ebath
-    from functions import calHF, calTC
+    from tools import calHF, calTC
     from lammpsdriver import lammpsdriver
     from md import md
 

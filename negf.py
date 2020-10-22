@@ -53,20 +53,23 @@ class bpt:
         #eigvals, eigvecs = np.linalg.eig(self.dynmat)
         eigvals = np.linalg.eigh(self.dynmat)[0]
         # frequencies in eV
-        self.omegas = np.sqrt(np.abs(eigvals))*self.rpc
+        #self.omegas = np.sqrt(np.abs(eigvals))*self.rpc
         # Or remove false frequency
-        #reigvals = [item for item in eigvals if item >= 0]
-        #ieigvals = [item for item in eigvals if item < 0]
-        #self.omegas = np.sqrt(np.abs(reigvals))*self.rpc
+        reigvals = [item for item in eigvals if item >= 0]
+        ieigvals = [item for item in eigvals if item < 0]
+        self.omegas = np.sqrt(np.abs(reigvals))*self.rpc
         np.savetxt('omegas.dat', self.omegas)
-        #np.savetxt('eigvecs.dat', eigvecs)
-        #print(len(reigvals),'>=0',len(ieigvals),'<0')
+        if len(ieigvals) != 0:
+            print('False frequency exists in system.')
+            np.savetxt('iomegas.dat', np.sqrt(np.abs(ieigvals))*self.rpc,
+                       header='Frequency obtained by taking the absolute value of negative eigenvalue.')
+        # print(len(reigvals),'>=0',len(ieigvals),'<0')
         print('Angular frequency saved')
-# 
+
     def gettm(self):
         function = np.vectorize(self.tm)
-        self.tmnumber = np.array(np.column_stack((np.linspace(
-            0, self.maxomega, self.intnum+1), np.array(function(np.linspace(0, self.maxomega, self.intnum+1))))))
+        x = np.linspace(0, self.maxomega, self.intnum+1)
+        self.tmnumber = np.array(np.column_stack((x, np.array(function(x)))))
         np.savetxt('transmission.dat', np.column_stack(
             (self.tmnumber[:, 0]*self.rpc, self.tmnumber[:, 1])))
         print('Transmission saved')
@@ -85,7 +88,7 @@ class bpt:
         semat = np.delete(semat, [dof-len(self.dofatomfixed[0])
                                   for dof in self.dofatomfixed[1]], axis=1)
         if len(semat) != len(self.dynmat) or self.natoms*3 != len(self.dofatomfixed[0]) + len(self.dofatomfixed[1]) + len(semat):
-            print ('System DOF test failed, check again.')
+            print('System DOF test failed, check again')
             sys.exit()
         return semat
 
@@ -113,16 +116,16 @@ class bpt:
             omega, self.dofatomofbath[0]))), self.retargf(omega).conjugate().transpose()), self.gamma(self.selfenergy(omega, self.dofatomofbath[1])))))
 
     def thermalcurrent(self, T, delta):
-        #def f(omega):
+        # def f(omega):
         #    return self.rpc*omega/2 / \
         #        np.pi*self.tm(omega)*(self.bosedist(omega, T*(1+0.5*delta)) -
         #                              self.bosedist(omega, T*(1-0.5*delta)))
 
-        #def trape(function, maxnumber, n):
+        # def trape(function, maxnumber, n):
         #    function = np.vectorize(function)
         #    arr = function(np.linspace(0, maxnumber, n+1))
         #    return (float(maxnumber - 0)/n/2.)*(2*arr.sum() - arr[0] - arr[-1])
-        
+
         def f(i):
             return self.rpc*self.tmnumber[i, 0]/2 / \
                 np.pi*self.tmnumber[i, 1]*(self.bosedist(self.tmnumber[i, 0], T*(1+0.5*delta)) -
@@ -131,7 +134,7 @@ class bpt:
         def trape(function):
             n = len(self.tmnumber[:, 0]) - 1
             if n != self.intnum:
-                print ('Error in number of omega')
+                print('Error in number of omega')
                 sys.exit()
             function = np.vectorize(function)
             arr = function(range(n+1))
@@ -172,7 +175,7 @@ if __name__ == '__main__':
     infile = ['atom_style full',
               'units metal',
               'boundary f p p',
-              'read_data sExtended.data',
+              'read_data structure.data',
               'pair_style rebo',
               'pair_coeff * * CH.rebo C H',
               ]
@@ -180,7 +183,7 @@ if __name__ == '__main__':
     atomfixed = [range(0*3, (19+1)*3), range(181*3, (200+1)*3)]
     atomofbath = [range(20*3, (69+1)*3), range(131*3, (180+1)*3)]
     mybpt = bpt(infile, atomofbath, atomfixed,
-                   maxomega=0.25, num=100, damp=0.1)
+                maxomega=0.25, num=100, damp=0.1)
     mybpt.plotresult()
     # T_H/C = T*(1±delta/2)
     T = [100, 200, 300, 400, 500, 600, 700,

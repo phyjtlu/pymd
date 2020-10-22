@@ -1,4 +1,3 @@
-import glob
 import sys
 
 import numpy as N
@@ -241,70 +240,3 @@ def powerspec2(ps, dt, nmd):
     psw = N.real(N.transpose(psw*N.conjugate(psw)))
     dos2 = N.array([[i*dw, N.sum(psw[i])/dt/nmd] for i in range(nmd)])
     return dos2
-
-
-def calHF(dlist=1):
-    # calculate average heat flux
-    print("Calculate heat flux.")
-    # temperture=temp
-    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
-        with open(filename, 'r') as f:
-            for line in f:
-                temperture = float(line.split()[1])
-
-    dlist = list(range(dlist))
-    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
-    kb = N.empty([2, times])
-
-    for i in range(2):
-        for j in range(times):
-            kappafile = "./kappa." + \
-                str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
-            for files in glob.glob(kappafile):
-                with open(files, 'r') as f:
-                    for line in f:
-                        kb[i][j] = line.split()[2]
-#                        temperture=float(line.split()[1])
-    oldkb = N.delete(kb, dlist, axis=1)
-    balancekb = N.delete(kb, dlist, axis=1)
-    for i in range(balancekb.shape[0]):
-        for j in range(balancekb.shape[1]):
-            balancekb[i][j] = N.mean(oldkb[i][0:j+1])
-
-    heatflux = (balancekb[0]-balancekb[1])/2
-
-    with open('heatflux.'+str(int(temperture))+'.dat', 'w') as f:
-        f.write("Temperture\t"+str(temperture)+"\n"+"Bath0\t" +
-                str(balancekb[0])+"\n"+"Bath1\t"+str(balancekb[1])+"\n"+"HeatFlux\t"+str(heatflux)+"\n"+"\n")
-
-
-def calTC(delta, dlist=0):
-    # calculate thermal conductance
-    print("Calculate thermal conductance.")
-    delta = delta
-    # temperture=temp
-    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
-        with open(filename, 'r') as f:
-            for line in f:
-                temperture = float(line.split()[1])
-    dlist = list(range(dlist))
-    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
-    kb = N.empty([2, times])
-
-    for i in range(2):
-        for j in range(times):
-            kappafile = "./kappa." + \
-                str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
-            for files in glob.glob(kappafile):
-                with open(files, 'r') as f:
-                    for line in f:
-                        kb[i][j] = line.split()[2]
-#                        temperture=float(line.split()[1])
-    kappa = (kb[0]-kb[1])/2/(delta*temperture)
-    kappa = N.delete(kappa, dlist)
-    # for i in range(len(kappa)):
-    #    kappa[i]=N.mean(kappa[0:i+1])
-
-    with open('thermalconductance.'+str(int(temperture))+'.dat', 'w') as f:
-        f.write("Temperture\t"+str(temperture)+"\n"+"ThermalConductance\t"+str(kappa)+"\n" +
-                "Mean\t"+str(N.mean(kappa))+"\n"+"StandardDeviation\t"+str(N.std(kappa))+"\n")

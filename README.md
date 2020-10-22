@@ -10,7 +10,7 @@ The important feature of this script is that, the statistics of the bath degrees
 
 ### Python package
 
-numpy, netCFD4, tqdm, inelastica, LAMMPS
+numpy, netCFD4, tqdm, LAMMPS
 
 ### LAMMPS
 

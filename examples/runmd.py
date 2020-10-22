@@ -1,7 +1,7 @@
 import time
-
+import numpy as np
 from baths import ebath
-from functions import calHF, calTC
+from tools import calHF, calTC
 from lammpsdriver import lammpsdriver
 from md import md
 
@@ -10,7 +10,7 @@ lammpsinfile = [
     'atom_style full',
     'units metal',
     'boundary f p p',
-    'read_data sExtended.data',
+    'read_data structure.data',
     'pair_style rebo',
     'pair_coeff * * CH.rebo C H',
 ]
@@ -51,8 +51,8 @@ mdrun.AddLMPint(lmp)
 # unit in 0.658211814201041 fs
 damp = 100/0.658211814201041
 
-etal = (1.0/damp)*N.identity(len(ecatsl), N.float)
-etar = (1.0/damp)*N.identity(len(ecatsr), N.float)
+etal = (1.0/damp)*np.identity(len(ecatsl), np.float)
+etar = (1.0/damp)*np.identity(len(ecatsr), np.float)
 # atom indices that are connecting to bath
 ebl = ebath(ecatsl, T*(1+delta/2), mdrun.dt, mdrun.nmd,
             wmax=1., nw=500, bias=0.0, efric=etal, classical=False, zpmotion=True)
