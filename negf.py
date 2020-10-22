@@ -7,7 +7,7 @@ from lammps import lammps
 
 class bpt:
     # Use NEGF to calculate ballistic phonon transport
-    def __init__(self, infile, dofatomofbath, dofatomfixed=[[], []], maxomega=0.5, num=1000, damp=0.1):
+    def __init__(self, infile, dofatomofbath, dofatomfixed=[[], []], maxomega=0.5, num=1000, damp=0.1, vector=False):
         print('Class init')
         # reduced Planck constant unit in: eV ps
         self.rpc = 6.582119569e-4
@@ -20,7 +20,7 @@ class bpt:
         self.dofatomfixed = dofatomfixed
         self.dofatomofbath = dofatomofbath
         self.getdynmat()
-        self.gettm()
+        self.gettm(vector)
 
     def getdynmat(self):
         #import os
@@ -66,10 +66,19 @@ class bpt:
         # print(len(reigvals),'>=0',len(ieigvals),'<0')
         print('Angular frequency saved')
 
-    def gettm(self):
-        function = np.vectorize(self.tm)
+    def gettm(self, vector):
+        print('Calculate transmission')
         x = np.linspace(0, self.maxomega, self.intnum+1)
-        self.tmnumber = np.array(np.column_stack((x, np.array(function(x)))))
+        if vector:
+            function = np.vectorize(self.tm)
+            self.tmnumber = np.array(
+                np.column_stack((x, np.array(function(x)))))
+        else:
+            from tqdm import tqdm
+            tm = []
+            for var in tqdm(x, unit="steps", mininterval=1):
+                tm.append(self.tm(var))
+            self.tmnumber = np.array(np.column_stack((x, np.array(tm))))
         np.savetxt('transmission.dat', np.column_stack(
             (self.tmnumber[:, 0]*self.rpc, self.tmnumber[:, 1])))
         print('Transmission saved')
