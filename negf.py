@@ -7,7 +7,7 @@ from lammps import lammps
 
 class bpt:
     # Use NEGF to calculate ballistic phonon transport
-    def __init__(self, infile, dofatomofbath, dofatomfixed=[[], []], maxomega=0.5, num=1000, damp=0.1, vector=False):
+    def __init__(self, infile, maxomega, damp, dofatomofbath, dofatomfixed=[[], []], num=1000, vector=False):
         print('Class init')
         # reduced Planck constant unit in: eV ps
         self.rpc = 6.582119569e-4
@@ -29,14 +29,15 @@ class bpt:
         # if os.path.exists('atoms.xyz'):
         #    print('Remove atoms.xyz')
         #    os.remove('atoms.xyz')
-        lmp.commands_list(self.infile)
         print('LAMMPS init')
+        lmp.commands_list(self.infile)
+        print('Calculate dynamical matrix')
         lmp.command('dynamical_matrix all eskm 0.000001 file dynmat.dat')
         #lmp.command('dump 1 all xyz 1 atoms.xyz')
         #lmp.command('run 0')
         self.natoms = lmp.get_natoms()
         lmp.close()
-        print('Dynamical matrix saved')
+        print('Calculate angular frequency')
 
         self.dynmat = []
         self.omegas = []
@@ -60,11 +61,10 @@ class bpt:
         self.omegas = np.sqrt(np.abs(reigvals))*self.rpc
         np.savetxt('omegas.dat', self.omegas)
         if len(ieigvals) != 0:
-            print('False frequency exists in system.')
+            print('False frequency exists in system')
             np.savetxt('iomegas.dat', np.sqrt(np.abs(ieigvals))*self.rpc,
-                       header='Frequency obtained by taking the absolute value of negative eigenvalue.')
+                       header='Frequency obtained by taking the absolute value of negative eigenvalue')
         # print(len(reigvals),'>=0',len(ieigvals),'<0')
-        print('Angular frequency saved')
 
     def gettm(self, vector):
         print('Calculate transmission')
@@ -210,4 +210,4 @@ if __name__ == '__main__':
     plt.ylabel('Thermal Conductance(nW/K)')
     plt.savefig('thermalconductance.png')
     time_end = time.time()
-    print('time cost', time_end-time_start, 's.')
+    print('time cost', time_end-time_start, 's')

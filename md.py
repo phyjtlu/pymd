@@ -147,7 +147,7 @@ class md:
         print("Number of baths attached:"+str(len(self.baths))+"\n\n\n")
 
         if self.dyn is None:
-            print("md.info: No dynamical matrix input!")
+            print("md.info: No dynamical matrix input")
             # sys.exit()
 
     def ResetSavepq(self, savepq=True):
@@ -157,7 +157,7 @@ class md:
             self.qs = N.zeros((self.nmd, self.nph))
             #self.power = N.zeros((self.nmd,2))
         else:
-            print("md.ResetSavepq: nmd or nph is not set!")
+            print("md.ResetSavepq: nmd or nph is not set")
 
     # def energy(self):
     #    return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
@@ -172,10 +172,10 @@ class md:
         Adding a bath
         """
         if self.dt != bath.dt:
-            print("md.AddBath: md time step dt not consistent!")
+            print("md.AddBath: md time step dt not consistent")
             sys.exit()
         if self.nmd != bath.nmd:
-            print("md.AddBath: number of md steps nmd not consistent!")
+            print("md.AddBath: number of md steps nmd not consistent")
             sys.exit()
         self.baths.append(bath)
         # make sure we save enought memory for all the baths
@@ -232,7 +232,7 @@ class md:
             print("md.setDyn: checking dynamical matrix")
             n = chkShape(ndyn)
             if self.nph is not None and self.nph != n:
-                print("md.setDyn: the dimension of dynamical matrix is wrong!")
+                print("md.setDyn: the dimension of dynamical matrix is wrong")
                 sys.exit(0)
             self.nph = n
             print("md.setDyn: symmetrizing dynamical matrix")
@@ -258,9 +258,10 @@ class md:
             print("md.setDyn: Done")
         else:
             self.dyn = None
-            self.hw = None
+            self.hw = [1.0]
             self.U = None
-            print("md.setDyn: no dynamical matrix provided!")
+            print("md.setDyn: no dynamical matrix provided")
+            print("Set max eigen frequencies 1.0eV")
             # sys.exit()
 
     def initialise(self):
@@ -269,7 +270,7 @@ class md:
         """
         self.t = 0
         if self.dyn is None:
-            print("md.initial: no dynamical matrix!")
+            print("md.initial: no dynamical matrix")
             # sys.exit()
             print("p,q set to 0")
             self.p = N.zeros(self.nph)
@@ -310,7 +311,7 @@ class md:
             self.qhis = N.zeros((self.ml, self.nph))
             self.phis = N.zeros((self.ml, self.nph))
         else:
-            print("self.nph and self.ml are not set!")
+            print("self.nph and self.ml are not set")
             sys.exit()
 
     def GetPower(self):
@@ -318,8 +319,8 @@ class md:
         calculate the power spectrum from the MD trajectories.
         """
         if not self.savepq:
-            print("md.GetPower: trajectories not saved!")
-            print("md.GetPower: you need to set savepq to True!")
+            print("md.GetPower: trajectories not saved")
+            print("md.GetPower: you need to set savepq to True")
             sys.exit()
         print("md.GetPower: generate power spectrum from trajectories.")
         self.power = powerspec(self.qs, self.dt, self.nmd)
@@ -409,7 +410,7 @@ class md:
     #        else:
     #            slist=self.syslist
     #            if len(q)/3 != len(slist):
-    #                print "md:potforce: length error!"
+    #                print "md:potforce: length error"
     #                sys.exit()
     #            extq = N.zeros(len(self.xyz))
     #            for i in range(len(slist)):
@@ -440,7 +441,7 @@ class md:
     #        else:
     #            slist=self.syslist
     #            if len(q)/3 != len(slist):
-    #                print "md:potforce: length error!"
+    #                print "md:potforce: length error"
     #                sys.exit()
     #            extq = N.zeros(len(self.xyz))
     #            for i in range(len(slist)):
@@ -470,7 +471,7 @@ class md:
             return self.f0
 
         if len(q)/3 != len(self.syslist):
-            print("md:potforce: length error!")
+            print("md:potforce: length error")
             sys.exit()
         extq = N.zeros(len(self.xyz))
         for i in range(len(self.syslist)):
@@ -509,10 +510,10 @@ class md:
         add siesta instance
         """
         # if sint.xyz != self.xyz:
-        #    print "md.AddSint: xyz not consistent!"
+        #    print "md.AddSint: xyz not consistent"
         #    sys.exit()
         # if sint.els != self.els:
-        #    print "md.AddSint: els not consistent!"
+        #    print "md.AddSint: els not consistent"
         #    sys.exit()
         self.sint = sint
         # print "Starting Siesta Server..."
@@ -656,6 +657,7 @@ class md:
                          (j, self.T, N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
 
+            #TODO average trajectorie
             # power spectrum
             f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
             # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
