@@ -722,8 +722,6 @@ if __name__ == "__main__":
         "read_data structure.data",
         "pair_style rebo ",
         "pair_coeff * * CH.rebo C H",
-        "min_style cg",
-        "minimize 1e-25 1e-25 5000 10000",
     ]
     # temperature
     T = 300
