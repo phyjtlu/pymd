@@ -59,9 +59,7 @@ class md:
 
     def __init__(self, dt, nmd, T, syslist=None, axyz=None, harmonic=False, dyn=None, savepq=True, writepq=True, rmnc=False, nstart=0, nstop=1, npie=8, constr=None, nstep=100, md2ang=0.06466):
         # drivers
-        self.sint = None  # siesta instance
-        self.brennerrun = None
-        self.lammpsrun = None
+        self.pforce = None
 
         self.constraint = constr
         self.nstart = nstart
@@ -323,11 +321,11 @@ class md:
             print("md.GetPower: you need to set savepq to True")
             sys.exit()
         print("md.GetPower: generate power spectrum from trajectories.")
-        self.power = powerspec(self.qs, self.dt, self.nmd)
+        self.power = powerspec(self.ps, self.dt, self.nmd)
         if self.atomlist is not None:
             for layers in range(len(self.atomlist)):
                 self.poweratomlist[layers] = powerspec(
-                    self.qs[:, self.atomlist[layers]], self.dt, self.nmd)
+                    self.ps[:, self.atomlist[layers]], self.dt, self.nmd)
 
     def vv(self, id):
         """
@@ -396,140 +394,44 @@ class md:
             pf = pf + self.fbaths[i]
         return pf
 
-    # def potforce(self,q):
-    #    """
-    #    potential force
-    #    """
-    #    if sameq(q,self.q0):
-    #        return self.f0
-    #    else:
-    #        #use dynamical matrix
-    #        if self.sint is None:
-    #            f=-mdot(self.dyn,q)
-    #        #use siesta force
-    #        else:
-    #            slist=self.syslist
-    #            if len(q)/3 != len(slist):
-    #                print "md:potforce: length error"
-    #                sys.exit()
-    #            extq = N.zeros(len(self.xyz))
-    #            for i in range(len(slist)):
-    #                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
-    #            fa = self.sint.force(extq)
-    #            f = N.zeros(len(q))
-    #            for i in range(len(f)/3):
-    #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-    #        #save
-    #        self.q0=q
-    #        self.f0=f
-    #        return f
-    #
-    # def potforce(self,q):
-    #    """
-    #    Tue's version including brenner
-    #    """
-    #    if sameq(q,self.q0):
-    #        return self.f0
-    #    else:
-    #        #use dynamical matrix
-    #        if self.sint is None:
-    #            if self.brennerrun is None:
-    #                f=-mdot(self.dyn,q)
-    #            else:
-    #                f=self.brennerrun.force(q)
-    #        #use siesta force
-    #        else:
-    #            slist=self.syslist
-    #            if len(q)/3 != len(slist):
-    #                print "md:potforce: length error"
-    #                sys.exit()
-    #            extq = N.zeros(len(self.xyz))
-    #            for i in range(len(slist)):
-    #                extq[3*slist[i]:3*(slist[i]+1)] = q[3*i:3*(i+1)]
-    #            fa = self.sint.force(extq)
-    #            f = N.zeros(len(q))
-    #            for i in range(len(f)/3):
-    #                f[i*3:(i+1)*3] = fa[slist[i]*3:(slist[i]+1)*3]
-    #        #save
-    #        self.q0=q
-    #        self.f0=f
-    #        return f
-
     def potforce(self, q):
         """
         Potential force from drivers
-        8Nov2018:
         Now we have the following 4 drivers:
             Siesta, Brenner, Lammps, harmonic
 
         q is an array of displacements of the atoms in self.syslist
         """
+        # TODO Simplified code
         # self.q0 and f0 are the displacment and
         # force of last call. If the displacement
         # did not change, use the old force.
         if sameq(q, self.q0):
             return self.f0
 
-        if len(q)/3 != len(self.syslist):
-            print("md:potforce: length error")
-            sys.exit()
-        extq = N.zeros(len(self.xyz))
-        for i in range(len(self.syslist)):
-            extq[3*self.syslist[i]:3*(self.syslist[i]+1)] = q[3*i:3*(i+1)]
+        # if len(q)/3 != len(self.syslist):
+        #     print("md:potforce: length error")
+        #     sys.exit()
 
         # search for possible drivers
-        # use siesta force
-        if self.sint is not None:
-            fa = self.sint.force(extq)
-            f = N.zeros(len(q))
-            for i in range(len(f)/3):
-                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
-        # use brenner force
-        elif self.brennerrun is not None:
-            f = self.brennerrun.force(q)
-        # use lammps force
-        elif self.lammpsrun is not None:
-            fa = self.lammpsrun.force(extq)
-            f = N.zeros(len(q))
-            for i in range(int(len(f)/3)):
-                f[i*3:(i+1)*3] = fa[self.syslist[i]*3:(self.syslist[i]+1)*3]
+        if self.potforce is not None:
+            f = self.pforce.force(q)
         # use dynamical matrix
         elif self.dyn is not None:
             f = -1*mdot(self.dyn, q)
         else:
             print("no driver, no md")
             sys.exit()
-
         # save
         self.q0 = q
         self.f0 = f
         return f
 
-    def AddSint(self, sint):
+    def AddPotential(self, pint):
         """
-        add siesta instance
+        add siesta, lammps or Brenner instance
         """
-        # if sint.xyz != self.xyz:
-        #    print "md.AddSint: xyz not consistent"
-        #    sys.exit()
-        # if sint.els != self.els:
-        #    print "md.AddSint: els not consistent"
-        #    sys.exit()
-        self.sint = sint
-        # print "Starting Siesta Server..."
-        # self.sint.start()
-
-    def AddBint(self, bint):
-        """
-        add Brenner instance
-        """
-        self.brennerrun = bint
-
-    def AddLMPint(self, lint):
-        """
-        add Lammps instance
-        """
-        self.lammpsrun = lint
+        self.pforce = pint
 
     def Run(self):
         """
@@ -563,10 +465,8 @@ class md:
                     # TODO too long to save, cutoff power lengh
                     if self.writepq:
                         self.power = ReadNetCDFVar(fn, 'power')
-                        self.power2 = ReadNetCDFVar(fn, 'power2')
-                        self.powerecatsl = ReadNetCDFVar(fn, 'powerecatsl')
-                        self.powerecatsr = ReadNetCDFVar(fn, 'powerecatsr')
-                        self.powerslist = ReadNetCDFVar(fn, 'powerslist')
+                        if self.atomlist is not None:
+                            self.poweratomlist = ReadNetCDFVar(fn, 'poweratomlist')
                         self.qs = ReadNetCDFVar(fn, 'qs')
                         self.ps = ReadNetCDFVar(fn, 'ps')
                     else:
@@ -578,10 +478,6 @@ class md:
                 elif(ipie+1 == self.npie):
                     print("finished run")
                     self.power = ReadNetCDFVar(fn, 'power')
-                    #self.power2 = ReadNetCDFVar(fn, 'power2')
-                    #self.powerecatsl = ReadNetCDFVar(fn, 'powerecatsl')
-                    #self.powerecatsr = ReadNetCDFVar(fn, 'powerecatsr')
-                    #self.powerslist = ReadNetCDFVar(fn, 'powerslist')
                     self.t = ReadNetCDFVar(fn, 't')[0]
                     continue
                 else:
@@ -620,7 +516,9 @@ class md:
                 for _ in tqdm(range(int(self.nmd/self.npie)), unit="steps", mininterval=1):
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
-                        # trajfile.write(str(len(self.els))+'\n'+str(self.lammpsrun.energy("pe")+self.energy())+'\n')
+                        #head = str(len(self.els))+'\n'+str(self.t-1)+'\n'
+                        #N.savetxt(trajfile, N.column_stack((
+                        #    self.els, N.transpose(N.reshape(self.xyz+self.conv*self.q,(3,len(self.els))))[:], N.transpose(N.reshape(self.f,(3,len(self.els))))[:])), header=head)
                         trajfile.write(str(len(
                             self.els))+'\n'+str(self.t-1)+'\n')
                         for ip in range(len(self.els)):
@@ -857,7 +755,7 @@ if __name__ == "__main__":
     mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True, rmnc=False,
                nstart=nstart, nstop=nstop, npie=1, constr=fixatoms, nstep=100)
     # attache lammps driver to md
-    mdrun.AddLMPint(lmp)
+    mdrun.AddPotential(lmp)
     # unit in 0.658211814201041 fs
     damp = 100/0.658211814201041
 
