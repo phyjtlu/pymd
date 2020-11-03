@@ -150,12 +150,12 @@ def rpadleft(bs, b):
         sys.exit()
 
 
-def mm(* args):
-    tmp = args[0].copy()
-    for ii in range(1, len(args)):
-        tmp = N.dot(tmp, args[ii])
-    return tmp
-
+def mdot(* args):
+    #tmp = args[0].copy()
+    #for ii in range(1, len(args)):
+    #    tmp = N.dot(tmp, args[ii])
+    #return tmp
+    return N.linalg.multi_dot([im for im in args])
 
 def chkShape(a):
     """
@@ -192,15 +192,6 @@ def dagger(a):
 def hermitianize(a):
     aa = N.array(a)
     return 0.5*(aa+dagger(aa))
-
-
-def mdot(* args):
-    # dot product with arbitrary number of arguments
-    tmp = N.identity(len(args[0]))
-    for ii in range(len(args)):
-        tmp = N.dot(tmp, args[ii])
-    return tmp
-
 
 def powerspec(qs, dt, nmd):
     """

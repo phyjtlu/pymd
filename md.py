@@ -10,7 +10,7 @@ from numpy import linalg as LA
 from tqdm import tqdm
 
 import units as U
-from functions import bose, chkShape, mdot, mm, powerspec, rpadleft, symmetrize
+from functions import bose, chkShape, mdot, powerspec, rpadleft, symmetrize
 
 """
 #TODO:
@@ -158,12 +158,12 @@ class md:
             print("md.ResetSavepq: nmd or nph is not set")
 
     # def energy(self):
-    #    return 0.5*mm(self.p,self.p)+0.5*mm(self.q,self.dyn,self.q)
+    #    return 0.5*mdot(self.p,self.p)+0.5*mdot(self.q,self.dyn,self.q)
     def energy(self):
         """
         kinetic energy
         """
-        return 0.5*mm(self.p, self.p)
+        return 0.5*mdot(self.p, self.p)
 
     def AddBath(self, bath):
         """
@@ -249,7 +249,7 @@ class md:
                 av = avn
             self.hw = N.array(list(map(N.real, list(map(N.sqrt, av)))))
             self.U = N.array(au)
-            self.dyn = mm(self.U, N.diag(N.array(av)), N.transpose(self.U))
+            self.dyn = mdot(self.U, N.diag(N.array(av)), N.transpose(self.U))
             # if min(av)>=0:
             #    print "the dynmat should not change much"
             #    print "max diff. of dynmatrix:", abs(self.dyn-ndyn).sum()
@@ -353,8 +353,8 @@ class md:
 
         # evaluate current
         for i in range(len(self.baths)):
-            # self.baths[i].cur=N.append(self.baths[i].cur,mm(self.fbaths[i],p))
-            self.baths[i].cur[t % self.nmd] = mm(self.fbaths[i], p)
+            # self.baths[i].cur=N.append(self.baths[i].cur,mdot(self.fbaths[i],p))
+            self.baths[i].cur[t % self.nmd] = mdot(self.fbaths[i], p)
             self.fhis[i][t % self.nmd] = self.fbaths[i]
 
         # calculate velocity at next time
@@ -727,7 +727,7 @@ if __name__ == "__main__":
     T = 300
     delta = 0.2
     nstart = 0
-    nstop = 5
+    nstop = 1
     # time = 0.658fs #time unit
     dt = 0.25/0.658
     # number of md steps

@@ -2,12 +2,13 @@ import sys
 
 import numpy as N
 
-from functions import antisymmetrize, chkShape, flinterp, mm, symmetrize
+from functions import antisymmetrize, chkShape, flinterp, mdot, symmetrize
 from noise import enoise, mf, phnoise
 
 
 def exlist(a, indices):
-    return N.array([a[i] for i in indices])
+    return a[indices]
+    #return N.array([a[i] for i in indices])
 
 # fourier transform of gamma (calculated directly, no fft)
 
@@ -228,14 +229,14 @@ class ebath:
         f = self.noise[t % self.nmd]  # noise
         for i in range(self.ml):  # friction,nc,rn,berry
             if self.ml == 1:
-                f = f-mm(self.kernel[i], exlist(phis[i], self.cids))\
-                    + mm(self.bias*self.exim, exlist(qhis[0], self.cids))\
-                    - mm(self.bias*self.zeta1, exlist(qhis[0], self.cids))\
-                    - mm(self.bias*self.zeta2, exlist(phis[0], self.cids))
+                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))\
+                    + mdot(self.bias*self.exim, exlist(qhis[0], self.cids))\
+                    - mdot(self.bias*self.zeta1, exlist(qhis[0], self.cids))\
+                    - mdot(self.bias*self.zeta2, exlist(phis[0], self.cids))
             else:
                 print("WARNING: nonlocal electronic force not implemented!")
                 # stophere
-                f = f-mm(self.kernel[i], exlist(phis[i], self.cids))*self.dt
+                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))*self.dt
         return mf(f, self.cids, len(phis[0]))
 
 
@@ -433,7 +434,7 @@ class phbath:
         f = self.noise[t % self.nmd]  # noise
         for i in range(self.ml):  # friction
             if self.ml == 1:
-                f = f-mm(self.kernel[i], exlist(phis[i], self.cids))
+                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))
             else:
-                f = f-mm(self.kernel[i], exlist(phis[i], self.cids))*self.dt
+                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))*self.dt
         return mf(f, self.cids, len(phis[0]))

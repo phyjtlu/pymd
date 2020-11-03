@@ -47,7 +47,7 @@ print(len(dynamicatoms))
 mdrun = md(dt, nmd, T, syslist=None, axyz=lmp.axyz, writepq=True, rmnc=False,
            nstart=nstart, nstop=nstop, npie=1, constr=fixatoms, nstep=100)
 # attache lammps driver to md
-mdrun.AddPowerSection(lmp)
+mdrun.AddPotential(lmp)
 # unit in 0.658211814201041 fs
 damp = 100/0.658211814201041
 

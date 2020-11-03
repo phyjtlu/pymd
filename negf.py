@@ -9,7 +9,7 @@ class bpt:
     # Use NEGF to calculate ballistic phonon transport
     def __init__(self, infile, maxomega, damp, dofatomofbath, dofatomfixed=[[], []], num=1000, vector=False):
         print('Class init')
-        # reduced Planck constant unit in: eV ps
+        # reduced Planck constant unit in: eV*ps
         self.rpc = 6.582119569e-4
         # Boltzmann constant unit in: eV/K
         self.bc = 8.617333262e-5
@@ -191,8 +191,7 @@ if __name__ == '__main__':
     time_start = time.time()
     atomfixed = [range(0*3, (19+1)*3), range(181*3, (200+1)*3)]
     atomofbath = [range(20*3, (69+1)*3), range(131*3, (180+1)*3)]
-    mybpt = bpt(infile, atomofbath, atomfixed,
-                maxomega=0.25, num=100, damp=0.1)
+    mybpt = bpt(infile, 0.25, 0.1, atomofbath, atomfixed, 100)
     mybpt.plotresult()
     # T_H/C = T*(1±delta/2)
     T = [100, 200, 300, 400, 500, 600, 700,
