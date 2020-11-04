@@ -227,16 +227,25 @@ class ebath:
         BIAS IS DEFINED AS MUL-MUR
         '''
         f = self.noise[t % self.nmd]  # noise
-        for i in range(self.ml):  # friction,nc,rn,berry
-            if self.ml == 1:
-                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))\
-                    + mdot(self.bias*self.exim, exlist(qhis[0], self.cids))\
-                    - mdot(self.bias*self.zeta1, exlist(qhis[0], self.cids))\
-                    - mdot(self.bias*self.zeta2, exlist(phis[0], self.cids))
-            else:
-                print("WARNING: nonlocal electronic force not implemented!")
-                # stophere
-                f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))*self.dt
+        if not (self.exim.any() and self.zeta1.any() and self.zeta2.any()):
+            for i in range(self.ml):  # friction,nc,rn,berry
+                if self.ml == 1:
+                    f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))
+                else:
+                    print("WARNING: nonlocal electronic force not implemented!")
+                    # stophere
+                    f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))*self.dt
+        else:
+            for i in range(self.ml):  # friction,nc,rn,berry
+                if self.ml == 1:
+                    f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))\
+                        + mdot(self.bias*self.exim, exlist(qhis[0], self.cids))\
+                        - mdot(self.bias*self.zeta1, exlist(qhis[0], self.cids))\
+                        - mdot(self.bias*self.zeta2, exlist(phis[0], self.cids))
+                else:
+                    print("WARNING: nonlocal electronic force not implemented!")
+                    # stophere
+                    f = f-mdot(self.kernel[i], exlist(phis[i], self.cids))*self.dt
         return mf(f, self.cids, len(phis[0]))
 
 
