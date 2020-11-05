@@ -497,6 +497,11 @@ class md:
                             phis0.shape == self.phis.shape:
                         self.qhis = qhis0
                         self.phis = phis0
+                elif j==0:
+                    print("initialize a new simulation")
+                else:
+                    print("no previous nc file exists")
+                    sys.exit()
                 # noise generation
                 for i in range(len(self.baths)):  # loop over baths
                     self.baths[i].gnoi()
