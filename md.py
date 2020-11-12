@@ -463,10 +463,10 @@ class md:
                     self.qhis = ReadNetCDFVar(fn, 'qhis')
                     self.phis = ReadNetCDFVar(fn, 'phis')
                     # TODO too long to save, cutoff power lengh
+                    self.power = ReadNetCDFVar(fn, 'power')
+                    if self.atomlist is not None:
+                        self.poweratomlist = ReadNetCDFVar(fn, 'poweratomlist')
                     if self.writepq:
-                        self.power = ReadNetCDFVar(fn, 'power')
-                        if self.atomlist is not None:
-                            self.poweratomlist = ReadNetCDFVar(fn, 'poweratomlist')
                         self.qs = ReadNetCDFVar(fn, 'qs')
                         self.ps = ReadNetCDFVar(fn, 'ps')
                     else:
@@ -478,6 +478,8 @@ class md:
                 elif(ipie+1 == self.npie):
                     print("finished run")
                     self.power = ReadNetCDFVar(fn, 'power')
+                    if self.atomlist is not None:
+                        self.poweratomlist = ReadNetCDFVar(fn, 'poweratomlist')
                     self.t = ReadNetCDFVar(fn, 't')[0]
                     continue
                 else:
@@ -637,11 +639,11 @@ class md:
             # save all the histories of p,q or not
             Write2NetCDFFile(NCfile, self.ps, 'ps', ('nnmd', 'nph',), units='')
             Write2NetCDFFile(NCfile, self.qs, 'qs', ('nnmd', 'nph',), units='')
-            # power spectrum
-            Write2NetCDFFile(NCfile, self.power, 'power',
-                             ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.poweratomlist,
-                             'poweratomlist', ('atomlist', 'nnmd', 'two'), units='')
+        # power spectrum
+        Write2NetCDFFile(NCfile, self.power, 'power',
+                         ('nnmd', 'two',), units='')
+        Write2NetCDFFile(NCfile, self.poweratomlist,
+                         'poweratomlist', ('atomlist', 'nnmd', 'two'), units='')
 
         # energy
         Write2NetCDFFile(NCfile, self.etot, 'energy', ('nnmd',), units='')

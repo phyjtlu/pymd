@@ -179,6 +179,7 @@ if __name__ == '__main__':
     Heat Current: nW
     '''
     import time
+    import numpy as np
     from negf import bpt
     from matplotlib import pyplot as plt
     infile = ['atom_style full',
