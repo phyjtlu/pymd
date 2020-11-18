@@ -53,11 +53,8 @@ def calHF(dlist=1):
         for j in range(balancekb.shape[1]):
             balancekb[i][j] = np.mean(oldkb[i][0:j+1])
 
-    heatflux = (balancekb[0]-balancekb[1])/2
+    np.savetxt('heatflux.'+str(int(temperture))+'.dat',np.transpose((balancekb[0],balancekb[1],(balancekb[0]-balancekb[1])/2)),header="Bath0 Bath1 heatflux")
 
-    with open('heatflux.'+str(int(temperture))+'.dat', 'w') as f:
-        f.write("Temperture\t"+str(temperture)+"\n"+"Bath0\t" +
-                str(balancekb[0])+"\n"+"Bath1\t"+str(balancekb[1])+"\n"+"HeatFlux\t"+str(heatflux)+"\n"+"\n")
 
 
 def calTC(delta, dlist=1):
@@ -89,9 +86,7 @@ def calTC(delta, dlist=1):
     # for i in range(len(kappa)):
     #    kappa[i]=np.mean(kappa[0:i+1])
 
-    with open('thermalconductance.'+str(int(temperture))+'.dat', 'w') as f:
-        f.write("Temperture\t"+str(temperture)+"\n"+"ThermalConductance\t"+str(kappa)+"\n" +
-                "Mean\t"+str(np.mean(kappa))+"\n"+"StandardDeviation\t"+str(np.std(kappa))+"\n")
+    np.savetxt('thermalconductance.'+str(int(temperture))+'.dat',(np.mean(kappa),np.std(kappa)),header="Mean Std")
 
 
 if __name__ == "__main__":
