@@ -527,9 +527,10 @@ class md:
                         #    self.els, N.transpose(N.reshape(self.xyz+self.conv*self.q,(3,len(self.els))))[:], N.transpose(N.reshape(self.f,(3,len(self.els))))[:])), header=head)
                         trajfile.write(str(len(
                             self.els))+'\n'+str(self.t-1)+'\n')
+                        structure = self.xyz+self.conv*self.q
                         for ip in range(len(self.els)):
-                            trajfile.write(str(self.els[ip])+'    '+str(self.xyz[ip*3]+self.conv[ip*3]*self.q[ip*3])+'   '+str(self.xyz[ip*3+1]+self.conv[ip*3+1]*self.q[ip*3+1])+'   '+str(
-                                self.xyz[ip*3+2]+self.conv[ip*3+2]*self.q[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
+                            trajfile.write(str(self.els[ip])+'    '+str(structure[ip*3])+'   '+str(structure[ip*3+1])+'   '+str(
+                                structure[ip*3+2])+'   '+str(self.f[ip*3])+'   '+str(self.f[ip*3+1])+'   '+str(self.f[ip*3+2])+'\n')
                 self.dump(i, j)
             trajfile.close()
             # power spectrum
