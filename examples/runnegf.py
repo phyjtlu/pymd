@@ -6,7 +6,7 @@ lammpsinfile = [
     'atom_style full',
     'units metal',
     'boundary f p p',
-    'read_data sExtended.data',
+    'read_data structure.data',
     'pair_style rebo',
     'pair_coeff * * CH.rebo C H',
 ]
