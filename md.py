@@ -10,7 +10,7 @@ from numpy import linalg as LA
 from tqdm import tqdm
 
 import units as U
-from functions import bose, chkShape, mdot, powerspec, rpadleft, symmetrize
+from functions import bose, chkShape, mdot, powerspecp, rpadleft, symmetrize
 
 """
 #TODO:
@@ -119,7 +119,6 @@ class md:
 
         # var: ps,qs,power,savepq
         self.ResetSavepq(savepq)
-    # Add tracking of atomic trajectories
         self.md2ang = md2ang
         self.mass = []
         self.get_atommass()
@@ -321,10 +320,10 @@ class md:
             print("md.GetPower: you need to set savepq to True")
             sys.exit()
         print("md.GetPower: generate power spectrum from trajectories.")
-        self.power = powerspec(self.ps, self.dt, self.nmd)
+        self.power = powerspecp(self.ps, self.dt, self.nmd)
         if self.atomlist is not None:
             for layers in range(len(self.atomlist)):
-                self.poweratomlist[layers] = powerspec(
+                self.poweratomlist[layers] = powerspecp(
                     self.ps[:, self.atomlist[layers]], self.dt, self.nmd)
 
     def vv(self, id):

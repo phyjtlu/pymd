@@ -29,18 +29,18 @@ def calHF(dlist=1):
     # calculate average heat flux
     print("Calculate heat flux.")
     # temperture=temp
-    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
+    for filename in glob.glob('kappa.*.bath0.run0.dat'):
         with open(filename, 'r') as f:
             for line in f:
                 temperture = float(line.split()[1])
 
     dlist = list(range(dlist))
-    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
+    times = int(len(glob.glob('kappa.*.bath*.run*.dat'))/2)
     kb = np.empty([2, times])
 
     for i in range(2):
         for j in range(times):
-            kappafile = "./kappa." + \
+            kappafile = "kappa." + \
                 str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
             for files in glob.glob(kappafile):
                 with open(files, 'r') as f:
@@ -64,17 +64,17 @@ def calTC(delta, dlist=1):
     print("Calculate thermal conductance.")
     delta = delta
     # temperture=temp
-    for filename in glob.glob('./kappa.*.bath0.run0.dat'):
+    for filename in glob.glob('kappa.*.bath0.run0.dat'):
         with open(filename, 'r') as f:
             for line in f:
                 temperture = float(line.split()[1])
     dlist = list(range(dlist))
-    times = int(len(glob.glob('./kappa.*.bath*.run*.dat'))/2)
+    times = int(len(glob.glob('kappa.*.bath*.run*.dat'))/2)
     kb = np.empty([2, times])
 
     for i in range(2):
         for j in range(times):
-            kappafile = "./kappa." + \
+            kappafile = "kappa." + \
                 str(int(temperture))+".bath"+str(i)+".run"+str(j)+".dat"
             for files in glob.glob(kappafile):
                 with open(files, 'r') as f:
@@ -90,6 +90,7 @@ def calTC(delta, dlist=1):
 
 
 if __name__ == "__main__":
+    from tools import dumpavetraj
     lammps = "structure.data"
     trajectories = ["trajectories.300.run0.ani", "trajectories.300.run1.ani",
                     "trajectories.300.run2.ani", "trajectories.300.run3.ani", "trajectories.300.run4.ani"]

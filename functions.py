@@ -151,11 +151,8 @@ def rpadleft(bs, b):
 
 
 def mdot(* args):
-    #tmp = args[0].copy()
-    #for ii in range(1, len(args)):
-    #    tmp = N.dot(tmp, args[ii])
-    #return tmp
     return N.linalg.multi_dot([im for im in args])
+
 
 def chkShape(a):
     """
@@ -193,7 +190,8 @@ def hermitianize(a):
     aa = N.array(a)
     return 0.5*(aa+dagger(aa))
 
-def powerspec(qs, dt, nmd):
+
+def powerspecq(qs, dt, nmd):
     """
     qs      list of trajectories, shape(nmd,nph)
     dt      time step of MD simulation
@@ -206,14 +204,12 @@ def powerspec(qs, dt, nmd):
         sys.exit()
     dw = 2.*N.pi/dt/nmd
 
-    fti = myfft(dt, nmd)
-    qsw = N.array([fti.Fourier1D(a) for a in qst])
+    qsw = N.array([myfft(dt, nmd).Fourier1D(a) for a in qst])
     qsw = N.real(N.transpose(qsw*N.conjugate(qsw)))
-    dos = N.array([[i*dw, (dw*i)**2*N.sum(qsw[i])/dt/nmd] for i in range(nmd)])
-    return dos
+    return N.array([[i*dw, (dw*i)**2*N.sum(qsw[i])/dt/nmd] for i in range(nmd)])
 
 
-def powerspec2(ps, dt, nmd):
+def powerspecp(ps, dt, nmd):
     """
     ps      list of trajectories, shape(nmd,nph)
     dt      time step of MD simulation
@@ -226,8 +222,6 @@ def powerspec2(ps, dt, nmd):
         sys.exit()
     dw = 2.*N.pi/dt/nmd
 
-    fti = myfft(dt, nmd)
-    psw = N.array([fti.Fourier1D(a) for a in pst])
+    psw = N.array([myfft(dt, nmd).Fourier1D(a) for a in pst])
     psw = N.real(N.transpose(psw*N.conjugate(psw)))
-    dos2 = N.array([[i*dw, N.sum(psw[i])/dt/nmd] for i in range(nmd)])
-    return dos2
+    return N.array([[i*dw, N.sum(psw[i])/dt/nmd] for i in range(nmd)])
