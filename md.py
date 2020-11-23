@@ -498,7 +498,7 @@ class md:
                             phis0.shape == self.phis.shape:
                         self.qhis = qhis0
                         self.phis = phis0
-                elif j==0:
+                elif j == 0:
                     print("initialize a new simulation")
                 else:
                     print("no previous nc file exists")
@@ -523,7 +523,7 @@ class md:
                     self.vv(j)
                     if (self.t-1) == 0 or (self.t-1) % self.nstep == 0:
                         #head = str(len(self.els))+'\n'+str(self.t-1)+'\n'
-                        #N.savetxt(trajfile, N.column_stack((
+                        # N.savetxt(trajfile, N.column_stack((
                         #    self.els, N.transpose(N.reshape(self.xyz+self.conv*self.q,(3,len(self.els))))[:], N.transpose(N.reshape(self.f,(3,len(self.els))))[:])), header=head)
                         trajfile.write(str(len(
                             self.els))+'\n'+str(self.t-1)+'\n')
@@ -561,7 +561,15 @@ class md:
                          (j, self.T, N.mean(self.baths[ii].cur)*U.curcof))
                 fk.close()
 
-            #TODO average trajectorie
+            # save average structure
+            f = open("avestructure."+str(self.T)+"."+"run"+str(j)+".dat", "w")
+            avestructure = self.conv*(self.qs.mean(axis=0)) + self.xyz
+            f.write(str(len(
+                self.els))+'\n'+"average structure"+'\n')
+            for ip in range(len(self.els)):
+                f.write(str(self.els[ip])+'    '+str(avestructure[ip*3])+'   '+str(
+                    avestructure[ip*3+1])+'   '+str(avestructure[ip*3+2])+'\n')
+            f.close()
             # power spectrum
             f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
             # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
@@ -731,13 +739,13 @@ if __name__ == "__main__":
     ]
     # temperature
     T = 300
-    delta = 0.2
+    delta = 0.1
     nstart = 0
     nstop = 1
     # time = 0.658fs #time unit
     dt = 0.25/0.658
     # number of md steps
-    nmd = 2**12
+    nmd = 2**10
     # initialise lammps run
     lmp = lammpsdriver(infile=lammpsinfile)
     time_start = time.time()
