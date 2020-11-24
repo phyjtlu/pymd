@@ -556,17 +556,12 @@ class md:
                         poweratomlist[layers] = N.copy(
                             self.poweratomlist[layers])
                 self.GetPower()
-                power = (power*(j-self.nstart)+self.power) / \
+                self.power = (power*(j-self.nstart)+self.power) / \
                     float(j-self.nstart+1)
                 if self.atomlist is not None:
                     for layers in range(len(self.atomlist)):
-                        poweratomlist[layers] = (
+                        self.poweratomlist[layers] = (
                             poweratomlist[layers]*(j-self.nstart)+self.poweratomlist[layers])/float(j-self.nstart+1)
-                self.power = N.copy(power)
-                if self.atomlist is not None:
-                    for layers in range(len(self.atomlist)):
-                        poweratomlist[layers] = N.copy(
-                            self.poweratomlist[layers])
                 # power spectrum
                 f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
                 # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
