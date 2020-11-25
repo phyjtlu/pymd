@@ -36,8 +36,11 @@ class lammpsdriver(lammps):
         self.eunit = eunit
         if self.eunit == "eV":
             self.para = 1.0
-        if self.eunit == "Kcal/mole":
+        elif self.eunit == "Kcal/mole":
             self.para = 0.043
+        else:
+            print("Wrong vaule in eunit")
+            sys.exit(0)
         # start lammps
         self.start()
 

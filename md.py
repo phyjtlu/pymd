@@ -128,19 +128,18 @@ class md:
                     self.mass.append(value)
 
     def info(self):
-        print("--------------------------------------------\n")
-        print("Basis information of the MD simulation:\n\n")
-        print("--------------------------------------------\n")
-        print("Harmonic force: "+str(self.harmonic)+"\n")
-        print("System atom number:"+str(self.na)+"\n")
-        print("MD time step:"+str(self.dt)+"\n")
-        print("MD number of steps:"+str(self.nmd)+"\n")
-        print("MD memory kernel length:"+str(self.ml)+"\n")
-        print("Number of baths attached:"+str(len(self.baths))+"\n\n\n")
+        print("--------------------------------------------")
+        print("Basis information of the MD simulation:")
+        # print("Harmonic force: "+str(self.harmonic))
+        print("System atom number:"+str(self.na))
+        print("MD time step:"+str(self.dt))
+        print("MD number of steps:"+str(self.nmd))
+        print("MD memory kernel length:"+str(self.ml))
+        print("Number of baths attached:"+str(len(self.baths))+"\n")
 
-        if self.dyn is None:
-            print("md.info: No dynamical matrix input")
-            # sys.exit()
+        # if self.dyn is None:
+        #    print("md.info: No dynamical matrix input")
+        # sys.exit()
 
     def ResetSavepq(self):
         if self.savep and self.nmd is not None and self.nph is not None:
@@ -730,8 +729,8 @@ def ApplyConstraint(f, constr=None):
     if constr is None:
         return f
     nf = N.array(f)*1.0
-    constr = N.array(constr)
-    nf[constr] = 0
+    for i in range(len(constr)):
+        nf[constr[i]] = 0
     return nf
 
 
