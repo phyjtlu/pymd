@@ -4,6 +4,7 @@ import sys
 import numpy as np
 from lammps import lammps
 
+from tools import get_atomname
 
 class bpt:
     # Use NEGF to calculate ballistic phonon transport
@@ -20,22 +21,33 @@ class bpt:
         self.dofatomfixed = dofatomfixed
         self.dofatomofbath = dofatomofbath
         self.getdynmat()
+        self.write_v_sim()
         self.gettm(vector)
 
     def getdynmat(self):
-        #import os
         lmp = lammps()
         #lmp = lammps(cmdargs=['-screen', 'none', '-log', 'none'])
-        # if os.path.exists('atoms.xyz'):
-        #    print('Remove atoms.xyz')
-        #    os.remove('atoms.xyz')
         print('LAMMPS init')
         lmp.commands_list(self.infile)
         print('Calculate dynamical matrix')
         lmp.command('dynamical_matrix all eskm 0.000001 file dynmat.dat')
-        #lmp.command('dump 1 all xyz 1 atoms.xyz')
-        #lmp.command('run 0')
         self.natoms = lmp.get_natoms()
+        box = lmp.extract_box()
+        self.boxlo = np.array(box[0])
+        self.boxhi = np.array(box[1])
+        systype = np.array(lmp.gather_atoms("type", 0, 1))
+        mass = lmp.extract_atom("mass", 2)
+        self.els = []
+        for type in systype:
+            self.els.append([mass[type]]*3)
+        self.els = np.array(self.els).flatten()
+        self.xyz = lmp.gather_atoms("x", 1, 3)
+        self.els = np.delete(self.els, self.dofatomfixed[0])
+        self.els = np.delete(self.els, [
+            dof-len(self.dofatomfixed[0]) for dof in self.dofatomfixed[1]])
+        self.xyz = np.delete(self.xyz, self.dofatomfixed[0])
+        self.xyz = np.delete(self.xyz, [
+            dof-len(self.dofatomfixed[0]) for dof in self.dofatomfixed[1]])
         lmp.close()
         print('Calculate angular frequency')
 
@@ -51,20 +63,16 @@ class bpt:
                                 dof-len(self.dofatomfixed[0]) for dof in self.dofatomfixed[1]], axis=0)
         self.dynmat = np.delete(self.dynmat, [
                                 dof-len(self.dofatomfixed[0]) for dof in self.dofatomfixed[1]], axis=1)
-        #eigvals, eigvecs = np.linalg.eig(self.dynmat)
-        eigvals = np.linalg.eigh(self.dynmat)[0]
-        # frequencies in eV
-        #self.omegas = np.sqrt(np.abs(eigvals))*self.rpc
-        # Or remove false frequency
-        reigvals = [item for item in eigvals if item >= 0]
-        ieigvals = [item for item in eigvals if item < 0]
-        self.omegas = np.sqrt(np.abs(reigvals))*self.rpc
+        eigvals, self.eigvecs = np.linalg.eigh(self.dynmat)
+        for i, val in enumerate(eigvals):
+            if val > 0:
+                self.omegas.append(np.sqrt(val)*self.rpc)
+            else:
+                print('False frequency exists in system DOF %i ' %
+                      (i+len(self.dofatomfixed[0])))
+                self.omegas.append(-np.sqrt(-val)*self.rpc)
         np.savetxt('omegas.dat', self.omegas)
-        if len(ieigvals) != 0:
-            print('False frequency exists in system')
-            np.savetxt('iomegas.dat', np.sqrt(np.abs(ieigvals))*self.rpc,
-                       header='Frequency obtained by taking the absolute value of negative eigenvalue')
-        # print(len(reigvals),'>=0',len(ieigvals),'<0')
+        np.savetxt('eigvecs.dat', self.eigvecs)
 
     def gettm(self, vector):
         print('Calculate transmission')
@@ -154,6 +162,25 @@ class bpt:
 
     def thermalconductance(self, T, delta):
         return self.thermalcurrent(T, delta)/(T*delta)
+
+    def write_v_sim(self, filename="anime.ascii"):
+        text = "# Generated file for v_sim 3.7\n"
+        text += "%15.9f%15.9f%15.9f\n" % (
+            self.boxhi[0], self.boxlo[2], self.boxhi[1])
+        text += "%15.9f%15.9f%15.9f\n" % (
+            self.boxlo[0], self.boxlo[1], self.boxhi[2])
+        for i in range(int(len(self.els)/3)):
+            text += "%15.9f%15.9f%15.9f %2s\n" % (
+                self.xyz[3*i], self.xyz[3*i+1], self.xyz[3*i+2], get_atomname(self.els[3*i]))
+        for i, a in enumerate(self.omegas):
+            text += "#metaData: qpt=[%f;%f;%f;%f \\\n" % (0, 0, 0, a)
+            for u in range(int(len(self.els)/3)):
+                text += "#; %f; %f; %f; %f; %f; %f \\\n" % (
+                    self.eigvecs[i, 3*u]/self.els[3*u]**0.5, self.eigvecs[i, 3*u+1]/self.els[3*u]**0.5, self.eigvecs[i, 3*u+2]/self.els[3*u]**0.5, 0, 0, 0)
+            text += "# ]\n"
+        vfile = open(filename, 'w')
+        vfile.write(text)
+        vfile.close()
 
     def plotresult(self, lines=180):
         from matplotlib import pyplot as plt
