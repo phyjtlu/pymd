@@ -475,11 +475,11 @@ class md:
                         if self.atomlist is not None:
                             self.poweratomlist = ReadNetCDFVar(
                                 fn, 'poweratomlist')
-                    if self.saveall and self.q and self.p:
+                    if self.saveall and self.saveq and self.savep:
                         self.qs = ReadNetCDFVar(fn, 'qs')
                         self.ps = ReadNetCDFVar(fn, 'ps')
                     else:
-                        print("saveall need to be set true to continue")
+                        print("saveall savep & saveq need to be set true to continue")
                         sys.exit(0)
                     for i in range(len(self.baths)):
                         self.baths[i].noise = ReadNetCDFVar(fn, 'noise'+str(i))
@@ -649,7 +649,7 @@ class md:
         # els
         # Write2NetCDFFile(NCfile,self.els,'elements',('na',),units='')
 
-        if self.saveall and self.p and self.q:
+        if self.saveall:
             # noise series
             for i in range(len(self.baths)):
                 # NCfile.createDimension('n'+str(i),self.baths[i].nc)
@@ -658,14 +658,19 @@ class md:
                 Write2NetCDFFile(
                     NCfile, self.fhis[i], 'fhis'+str(i), ('nnmd', 'nph',), units='')
             # save all the histories of p,q or not
-            Write2NetCDFFile(NCfile, self.ps, 'ps', ('nnmd', 'nph',), units='')
-            Write2NetCDFFile(NCfile, self.qs, 'qs', ('nnmd', 'nph',), units='')
+            if self.savep:
+                Write2NetCDFFile(NCfile, self.ps, 'ps',
+                                 ('nnmd', 'nph',), units='')
+            if self.saveq:
+                Write2NetCDFFile(NCfile, self.qs, 'qs',
+                                 ('nnmd', 'nph',), units='')
         if self.savep:
             # power spectrum
             Write2NetCDFFile(NCfile, self.power, 'power',
                              ('nnmd', 'two',), units='')
-            Write2NetCDFFile(NCfile, self.poweratomlist,
-                             'poweratomlist', ('atomlist', 'nnmd', 'two'), units='')
+            if self.atomlist is not None:
+                Write2NetCDFFile(NCfile, self.poweratomlist,
+                                 'poweratomlist', ('atomlist', 'nnmd', 'two'), units='')
 
         # energy
         Write2NetCDFFile(NCfile, self.etot, 'energy', ('nnmd',), units='')
