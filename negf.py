@@ -164,6 +164,7 @@ class bpt:
         return self.thermalcurrent(T, delta)/(T*delta)
 
     def write_v_sim(self, filename="anime.ascii"):
+        # TODO: Not completely accurate in box setting & eigvecs
         text = "# Generated file for v_sim 3.7\n"
         text += "%15.9f%15.9f%15.9f\n" % (
             self.boxhi[0], self.boxlo[2], self.boxhi[1])
