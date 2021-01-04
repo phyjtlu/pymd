@@ -495,6 +495,7 @@ class md:
                     continue
                 else:
                     print("ipie error")
+                    print("ipie=",ipie)
                     sys.exit()
             else:
                 print("new run")
@@ -565,17 +566,17 @@ class md:
                 f = open("power."+str(self.T)+"."+"run"+str(j)+".dat", "w")
                 # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
                 # f.write("#energy    transmission    DoSL    DoSR\n")
-                for i in range(len(self.power)):
+                for ni in range(len(self.power)):
                     # only write out power spectrum upto 1.5max(hw)
                     if self.hw is not None:
-                        if(self.power[i, 0] < 1.5*max(self.hw)):
+                        if(self.power[ni, 0] < 1.5*max(self.hw)):
                             f.write("%f     %f \n" %
-                                    (self.power[i, 0], self.power[i, 1]))
+                                    (self.power[ni, 0], self.power[ni, 1]))
                         else:
                             break
                     else:
                         f.write("%f     %f \n" %
-                                (self.power[i, 0], self.power[i, 1]))
+                                (self.power[ni, 0], self.power[ni, 1]))
                 f.close()
                 if self.atomlist is not None:
                     for layers in range(len(self.atomlist)):
@@ -584,17 +585,17 @@ class md:
                                  str(self.T)+"."+"run"+str(j)+".dat", "w")
                         # f.write("#k-point averaged transmission and DoS from MAMA.py\n")
                         # f.write("#energy    transmission    DoSL    DoSR\n")
-                        for i in range(len(self.poweratomlist[layers])):
+                        for ni in range(len(self.poweratomlist[layers])):
                             # only write out power spectrum upto 1.5max(hw)
                             if self.hw is not None:
-                                if(self.poweratomlist[layers][i, 0] < 1.5*max(self.hw)):
+                                if(self.poweratomlist[layers][ni, 0] < 1.5*max(self.hw)):
                                     f.write("%f     %f \n" % (
-                                        self.poweratomlist[layers][i, 0], self.poweratomlist[layers][i, 1]))
+                                        self.poweratomlist[layers][ni, 0], self.poweratomlist[layers][ni, 1]))
                                 else:
                                     break
                             else:
                                 f.write("%f     %f \n" % (
-                                    self.poweratomlist[layers][i, 0], self.poweratomlist[layers][i, 1]))
+                                    self.poweratomlist[layers][ni, 0], self.poweratomlist[layers][ni, 1]))
                         f.close()
             # dump again, to make sure power is all right
             self.dump(i, j)
