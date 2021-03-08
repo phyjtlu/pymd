@@ -96,18 +96,18 @@ class bpt:
         print('Calculate power spectrum at '+str(T)+'K')
         x2 = np.linspace(0, maxomega/self.rpc, intnum+1)
         if vector:
-            function = np.vectorize(self.posp)
+            function = np.vectorize(self.ps)
             self.psnumber = np.array(
                 np.column_stack((x2, np.array(function(x2, T)))))
         else:
             from tqdm import tqdm
             ps = []
             for var in tqdm(x2, unit="steps", mininterval=1):
-                ps.append(self.posp(var, T))
+                ps.append(self.ps(var, T))
             self.psnumber = np.array(np.column_stack((x2, np.array(ps))))
         np.savetxt('powerspectrum.'+str(T)+'.dat', np.column_stack(
             (self.psnumber[:, 0]*self.rpc, self.psnumber[:, 1])))
-        print('Powerspectrum saved')
+        print('Power spectrum saved')
 
     def selfenergy(self, omega, dofatoms):
         return -1j*omega*(1/self.damp)*self.atomofbath(dofatoms)
@@ -145,7 +145,7 @@ class bpt:
         else:
             return 1/(np.exp(self.rpc*omega/self.bc/T)-1)
 
-    def posp(self, omega, T):
+    def ps(self, omega, T):
         # Power spectrum of selected atoms
         return -1*self.bosedist(omega, T)*np.trace(np.imag(self.retargf(omega)))
 
