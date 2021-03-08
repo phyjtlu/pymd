@@ -6,6 +6,7 @@ from lammps import lammps
 
 from tools import get_atomname
 
+
 class bpt:
     # Use NEGF to calculate ballistic phonon transport
     def __init__(self, infile, maxomega, damp, dofatomofbath, dofatomfixed=[[], []], num=1000, vector=False):
@@ -91,6 +92,23 @@ class bpt:
             (self.tmnumber[:, 0]*self.rpc, self.tmnumber[:, 1])))
         print('Transmission saved')
 
+    def getps(self, T, maxomega, intnum, vector=False):
+        print('Calculate power spectrum at '+str(T)+'K')
+        x2 = np.linspace(0, maxomega/self.rpc, intnum+1)
+        if vector:
+            function = np.vectorize(self.posp)
+            self.psnumber = np.array(
+                np.column_stack((x2, np.array(function(x2, T)))))
+        else:
+            from tqdm import tqdm
+            ps = []
+            for var in tqdm(x2, unit="steps", mininterval=1):
+                ps.append(self.posp(var, T))
+            self.psnumber = np.array(np.column_stack((x2, np.array(ps))))
+        np.savetxt('powerspectrum.'+str(T)+'.dat', np.column_stack(
+            (self.psnumber[:, 0]*self.rpc, self.psnumber[:, 1])))
+        print('Powerspectrum saved')
+
     def selfenergy(self, omega, dofatoms):
         return -1j*omega*(1/self.damp)*self.atomofbath(dofatoms)
 
@@ -126,6 +144,10 @@ class bpt:
             return np.iinfo(np.int32).max
         else:
             return 1/(np.exp(self.rpc*omega/self.bc/T)-1)
+
+    def posp(self, omega, T):
+        # Power spectrum of selected atoms
+        return -1*self.bosedist(omega, T)*np.trace(np.imag(self.retargf(omega)))
 
     def tm(self, omega):
         # Transmission
@@ -230,6 +252,7 @@ if __name__ == '__main__':
     for temp in T:
         thermalconductance.append(
             [temp, mybpt.thermalconductance(temp, delta)])
+    mybpt.getps(300, 0.5, 1000)
     np.savetxt('thermalconductance.dat', thermalconductance)
     plt.figure(5)
     plt.plot(np.array(thermalconductance)[

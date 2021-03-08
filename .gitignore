@@ -4,3 +4,5 @@
 *.dat
 *.ani
 log.lammps
+.vscode
+lammps-comparison
