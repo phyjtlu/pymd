@@ -72,7 +72,7 @@ def flinterp(x,xs,ys):
 
     #linear interpolation
     dd=xs[id]-x
-    if dd<0:
+    if dd>0:
         return ys[id]+dd/(xs[id]-xs[id-1])*(ys[id]-ys[id-1])
     else:
         return ys[id]+dd/(xs[id]-xs[id+1])*(ys[id]-ys[id+1])
